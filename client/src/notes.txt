@@ -1,0 +1,4 @@
+To do's
+1. transformFile -- lib
+2. Render file component -- shared
+3. sample messages data -- constant  // done
