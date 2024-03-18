@@ -9,7 +9,7 @@ const GroupListItem = ({ chatId, group_id, group_name, avatar }) => {
       justifyContent={"flex-start"}
       spacing={2}
       alignItems={"flex-start"}
-      width={'350px'}
+      width={'100%'}
       p={'0.5rem'}
       bgcolor={"white"}
       boxShadow={'0 0 5px #a19f9f'}

@@ -1,5 +1,6 @@
-import { Box, Button, IconButton, styled } from "@mui/material";
+import { Box, Button, IconButton, ListItem, Paper, styled } from "@mui/material";
 import { inputGray, mainBg } from "../../constants/color";
+import { Link } from "react-router-dom";
 export const VisuallyHiddenInput = styled("input")({
   border: "1px solid red",
   position: "absolute",
@@ -20,6 +21,7 @@ export const StyledChatListColumn = styled(Box)({
   flex: 1,
   height: "calc(100vh - 4rem)",
   overflowY:"scroll",
+
 });
 export const StyledChatColumn = styled(Box)({
   // backgroundColor:"skyblue",
@@ -59,3 +61,12 @@ export const StyledChatFormInputBox = styled('input')({
   },
   fontSize:"15px"
 })
+
+export const StyledLink = styled(Link)({
+  textDecoration:"none"
+})
+
+export const AdminStyledPaper = styled(Paper)(({theme})=>( {
+  borderRadius:"5px",
+  padding:"15px"
+}))

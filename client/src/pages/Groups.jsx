@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { lightGrayBg } from "../constants/color";
-import { KeyboardBackspace, Menu, Group, Edit, Add } from "@mui/icons-material";
+import { KeyboardBackspace, Menu, Group, Edit, Add, People } from "@mui/icons-material";
 import { useDialog } from "../hooks/useDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GroupListItem from "../components/shared/GroupListItem";
@@ -25,7 +25,10 @@ import { users } from "../constants/sampleData";
 import UserListItem from "../components/shared/UserListItem";
 
 const ConfirmDeleteDialog = lazy(() =>
-  import("../components/dialog/ConfirmDialog.jsx")
+  import("../components/dialog/ConfirmDeleteDialog.jsx")
+);
+const AddGroupMemberDialog = lazy(() =>
+  import("../components/dialog/AddMember.jsx")
 );
 
 const Groups = () => {
@@ -33,6 +36,7 @@ const Groups = () => {
   const navigate = useNavigate();
   const groupName = useSearchParams()[0].get("group");
   const deleteGroupDialog = useDialog({});
+  const addGroupMemberDialog = useDialog({});
 
   const [removedMembers, setRemovedMembers] = useState([]);
   const [isGroupNameEdit, setIsGroupNameEdit] = useState(false);
@@ -53,6 +57,12 @@ const Groups = () => {
     );
   };
 
+  const deleteGroupHandler = () => {
+    deleteGroupDialog.closeHandler();
+  };
+  const addGroupMemberSaveChangesHandler = () => {
+    addGroupMemberDialog.closeHandler();
+  };
   useEffect(() => console.log({ removedMembers }), [removedMembers]);
 
   const GroupName = (
@@ -88,7 +98,7 @@ const Groups = () => {
   );
 
   const GroupMembersBox = (
-    <Stack alignItems={"center"} mt={'2rem'}>
+    <Stack alignItems={"center"} mt={"2rem"}>
       <Box
         width={"25rem"}
         bgcolor={"white"}
@@ -122,7 +132,11 @@ const Groups = () => {
           >
             DELETE
           </Button>
-          <Button startIcon={<Add />} variant="contained">
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            onClick={addGroupMemberDialog.openHandler}
+          >
             ADD MEMBER
           </Button>
         </Stack>
@@ -134,13 +148,13 @@ const Groups = () => {
     <Grid m={0} container height={"100vh"}>
       <Grid
         item
-        display={{ xs: "none", sm: "block" }}
-        sm={4}
+        display={{ xs: "none", md: "block" }}
+        md={4}
         bgcolor={lightGrayBg}
       >
         <GroupList />
       </Grid>
-      <Grid item xs={12} sm={8}>
+      <Grid item xs={12} md={8}>
         <Box
           width={"100%"}
           position={"sticky"}
@@ -168,18 +182,10 @@ const Groups = () => {
           </IconButton>
         </Box>
         <Drawer open={drawer.open} onClose={drawer.closeHandler}>
-          <List disablePadding>
-            <ListItem>
-              <ListItemButton>
-                <ListItemIcon>
-                  <Group />
-                </ListItemIcon>
-                <ListItemText>Groups</ListItemText>
-              </ListItemButton>
-            </ListItem>
-          </List>
+          <GroupList  />
         </Drawer>
         {GroupName}
+        <Typography variant="h6" color="initial"  display={"flex"} alignItems={'center'} gap={"0.5rem"} p={"1.2rem"}><People/> Members</Typography>
         {GroupMembersBox}
         <Suspense fallback={<h6>LOAIND</h6>}>
           {deleteGroupDialog.open && (
@@ -187,8 +193,19 @@ const Groups = () => {
               open={deleteGroupDialog.open}
               openHanlder={deleteGroupDialog.openHandler}
               closeHandler={deleteGroupDialog.closeHandler}
+              deleteAction={deleteGroupHandler}
               title={"Delete Group"}
               content={"Are you sure you want to delete this group"}
+            />
+          )}
+        </Suspense>
+        <Suspense fallback={<h6>LOAIND</h6>}>
+          {addGroupMemberDialog.open && (
+            <AddGroupMemberDialog
+              open={addGroupMemberDialog.open}
+              openHanlder={addGroupMemberDialog.openHandler}
+              closeHandler={addGroupMemberDialog.closeHandler}
+              saveChangesAction={addGroupMemberSaveChangesHandler}
             />
           )}
         </Suspense>

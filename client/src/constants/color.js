@@ -10,3 +10,4 @@ export const inputGray = '#f1f1f1';
 export const hoverMainBg = '#720082';
 // export const 
 export const lightGrayBg = '#ededed'
+export const darkBlue = '#2b689d'

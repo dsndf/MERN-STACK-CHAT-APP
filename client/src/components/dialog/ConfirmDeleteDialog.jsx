@@ -17,10 +17,7 @@ const ConfirmDeleteDialog = ({
   title,
   deleteAction,
 }) => {
-  const deleteHandler = () => {
-    deleteAction();
-    closeHandler();
-  };
+
 
   return (
     <Dialog open={open} onClose={closeHandler}>
@@ -33,7 +30,7 @@ const ConfirmDeleteDialog = ({
           <Button variant="text" color="error" onClick={closeHandler}>
             CANCEL
           </Button>
-          <Button variant="contained" color="primary" onClick={deleteHandler} >
+          <Button variant="contained" color="primary" onClick={deleteAction} >
             DELETE
           </Button>
         </DialogActions>
