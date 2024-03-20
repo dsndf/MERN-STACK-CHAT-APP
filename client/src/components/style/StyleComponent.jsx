@@ -68,5 +68,5 @@ export const StyledLink = styled(Link)({
 
 export const AdminStyledPaper = styled(Paper)(({theme})=>( {
   borderRadius:"5px",
-  padding:"15px"
+  padding:"5px"
 }))

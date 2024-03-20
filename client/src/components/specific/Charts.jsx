@@ -87,5 +87,5 @@ export const DougnutChart = ({ value = [22, 12] }) => {
       },
     ],
   };
-  return <Doughnut data={data} options={doughnutChartOptions} />;
+  return <Doughnut style={{zIndex:10}} data={data} options={doughnutChartOptions} />;
 };

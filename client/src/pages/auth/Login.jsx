@@ -10,10 +10,10 @@ import {
 } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { useState } from "react";
-import { VisuallyHiddenInput } from "../components/style/StyleComponent";
+import { VisuallyHiddenInput } from "../../components/style/StyleComponent";
 import { useInputValidation } from "6pp";
-import { useAvatar } from "../hooks/useAvatar";
-import Title from "../components/shared/Title";
+import { useAvatar } from "../../hooks/useAvatar";
+import Title from "../../components/shared/Title";
 
 const Login = () => {
   const [registerToggle, setRegisterToggle] = useState(false);

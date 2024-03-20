@@ -4,7 +4,7 @@ import UserListItem from "../shared/UserListItem";
 
 const UserList = ({ users, handler ,selectedUsersList }) => {
   return (
-    <List>
+    <List disablePadding>
       {users &&
         users.map((user) => {
           return (

@@ -15,7 +15,15 @@ import {
 } from "@mui/material";
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { lightGrayBg } from "../constants/color";
-import { KeyboardBackspace, Menu, Group, Edit, Add, People } from "@mui/icons-material";
+import {
+  KeyboardBackspace,
+  Menu,
+  Group,
+  Edit,
+  Add,
+  People,
+  Close,
+} from "@mui/icons-material";
 import { useDialog } from "../hooks/useDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GroupListItem from "../components/shared/GroupListItem";
@@ -175,17 +183,26 @@ const Groups = () => {
             <KeyboardBackspace color="light" />
           </IconButton>
           <IconButton
-            sx={{ display: { xs: "block", sm: "none" } }}
+            sx={{ display: { xs: "block", md: "none" } }}
             onClick={drawer.openHandler}
           >
-            <Menu />
+            {drawer.open ? <Close /> : <Menu />}
           </IconButton>
         </Box>
         <Drawer open={drawer.open} onClose={drawer.closeHandler}>
-          <GroupList  />
+          <GroupList />
         </Drawer>
         {GroupName}
-        <Typography variant="h6" color="initial"  display={"flex"} alignItems={'center'} gap={"0.5rem"} p={"1.2rem"}><People/> Members</Typography>
+        <Typography
+          variant="h6"
+          color="initial"
+          display={"flex"}
+          alignItems={"center"}
+          gap={"0.5rem"}
+          p={"1.2rem"}
+        >
+          <People /> Members
+        </Typography>
         {GroupMembersBox}
         <Suspense fallback={<h6>LOAIND</h6>}>
           {deleteGroupDialog.open && (

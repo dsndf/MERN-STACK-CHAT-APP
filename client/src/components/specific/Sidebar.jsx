@@ -3,9 +3,10 @@ import React from "react";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import { useLocation } from "react-router-dom";
 import {
-  BarChart,
   Dashboard,
+  Forum,
   Group,
+  Logout,
   ManageAccounts,
   Message,
   Style,
@@ -25,14 +26,19 @@ const tabs = [
     path: "/admin/users-management",
   },
   {
-    name: "Charts",
-    icon: <BarChart />,
-    path: "/admin/charts",
+    name: "Chats",
+    icon: <Forum />,
+    path: "/admin/chats",
   },
   {
     name: "Messages",
     icon: <Message />,
     path: "/admin/messages",
+  },
+  {
+    name: "Logout",
+    logutHandler: (cb) => cb(),
+    icon: <Logout />,
   },
 ];
 
@@ -46,16 +52,14 @@ const TabOption = ({ title, icon, style }) => {
       borderRadius={"30px"}
       p={"1rem"}
       width={"100%"}
-
       sx={{
         color: !style && darkBlue,
         transition: "all 0.5s",
         "&:hover": !style && {
           backgroundColor: "#ebf6ff",
         },
-        ...style
-      }}   
-       
+        ...style,
+      }}
     >
       {icon}
       <Typography variant="h6" sx={{ fontSize: "16px" }}>
@@ -65,7 +69,7 @@ const TabOption = ({ title, icon, style }) => {
   );
 };
 
-const Sidebar = () => {
+const Sidebar = ({ style }) => {
   const location = useLocation();
   return (
     <Stack
@@ -74,6 +78,7 @@ const Sidebar = () => {
       px={"2rem"}
       pt={"2rem"}
       height={"100%"}
+      {...style}
     >
       <Stack
         width={"100%"}
