@@ -1,6 +1,23 @@
-import { catchAsyncError } from "../utils/catchAsyncError";
+import { User } from "../models/user.js";
+import { ErrorHandler } from "../utils/ErrorHandler.js";
+import { catchAsyncError } from "../utils/catchAsyncError.js";
+import { sendUserResponse } from "../utils/sendUserResponse.js";
+import { validatePassword } from "../utils/validatePassword.js";
 
 export const signupUser = catchAsyncError(async (req, res, next) => {
-    const { name } = req.body;
-    res.json({ success: true, file: req.file })
+   const { name, username, bio, password } = req.body;
+   const file = req.file;
+   console.log(Object.keys(file));
+   const user = await User.create({ name, username, bio, password });
+   res.statusCode = 201;
+   sendUserResponse(user, res, "Signed up seccessfully");
 })
+
+
+export const loginUser = catchAsyncError(async (req, res, next) => {
+   const { username, password } = req.body;
+   const user = await User.findOne({ username }).select("password");
+   if (!user) return next(new ErrorHandler("Invalid Username", 400))
+   if (!await validatePassword(user.password, password)) return next(new ErrorHandler("Invalid Password", 400));
+   sendUserResponse(user, res, "Logged in successfully");
+});
