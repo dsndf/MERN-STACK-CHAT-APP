@@ -1,6 +1,6 @@
 import { hash } from "bcrypt";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
     },
     username: {
         type: String,
-        required: true
+        unique: true,
+        required: true,
     },
     bio: {
         type: String,
@@ -30,7 +31,8 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
         select: false
-    }
+    },
+    chats: [{ type: Schema.Types.ObjectId, ref: "Chat" }]
 }, { timestamps: true });
 
 console.log(mongoose.models);
@@ -44,7 +46,7 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.generateAuthToken = async function () {
     const _id = this._id;
-    const authToken = jwt.sign({ _id }, process.env.SECRET_KEY || "DSJHFSDFJS30DJD@23");
+    const authToken = jwt.sign({ _id }, process.env.SECRET_KEY);
     return authToken;
 }
 

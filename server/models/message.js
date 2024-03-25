@@ -19,7 +19,10 @@ const messageSchema = new mongoose.Schema({
         required: true,
         ref: "User"
     },
-
+   chat:{
+    type:Schema.Types.ObjectId,
+    required:true
+   }
 }, { timestamps: true });
 
 export const Message =  new mongoose.model("Message",messageSchema); 

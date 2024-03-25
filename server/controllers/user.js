@@ -8,8 +8,14 @@ export const signupUser = catchAsyncError(async (req, res, next) => {
    const { name, username, bio, password } = req.body;
    const file = req.file;
    console.log(Object.keys(file));
+
+   const isExist = await User.findOne({ username });
+   
+   if(isExist) next(new ErrorHandler("User already exists.",409));
+
    const user = await User.create({ name, username, bio, password });
    res.statusCode = 201;
+
    sendUserResponse(user, res, "Signed up seccessfully");
 })
 

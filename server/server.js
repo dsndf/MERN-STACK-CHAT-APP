@@ -5,6 +5,7 @@ import { customErrorHandler } from './middlewares/customErrorHandler.js';
 import { ErrorHandler } from './utils/ErrorHandler.js';
 import cookieParser from 'cookie-parser';
 import { userRouter } from './routers/userRouter.js';
+import { chatRouter } from './routers/chatRouter.js';
 
 process.on("uncaughtException", (err) => {
     console.log("👿 " + err.message);
@@ -22,17 +23,13 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.get('/', async (req, res, next) => {
-    res.cookie("sa1",1,{
-        httpOnly:true,
-        maxAge:2*24*60*60*1000,
-        sameSite:true,
-        secure:true
-    });
-res.json({success:true})
+
+    res.json({ success: true })
 })
-app.use('/api/v1',userRouter)
+app.use('/api/v1', userRouter)
+app.use('/api/v1', chatRouter);
 const server = app.listen(port, () => {
-     console.log("node environment is 🌲"+process.env.NODE_ENV);
+    console.log("node environment is 🌲" + process.env.NODE_ENV);
     console.log("✌ Listening at ", port);
 });
 

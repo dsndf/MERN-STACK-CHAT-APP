@@ -8,13 +8,18 @@ const chatSchema = new mongoose.Schema({
     },
     members: [{
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
     }]
     ,
     creator: {
-        type: String,
-        required: true
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required:true
+    },
+    lastMessage: {
+        type: Schema.Types.ObjectId,
+        ref: "Message"
     }
 }, { timestamps: true });
 
-export const Chat = new mongoose.model("chat", chatSchema); 
+export const Chat = new mongoose.model("Chat", chatSchema); 
