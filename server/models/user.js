@@ -32,7 +32,8 @@ const userSchema = new mongoose.Schema({
         unique: true,
         select: false
     },
-    chats: [{ type: Schema.Types.ObjectId, ref: "Chat" }]
+    chats: [{ type: Schema.Types.ObjectId, ref: "Chat" }],
+    friends:[{type:Schema.Types.ObjectId,ref:'User'}]
 }, { timestamps: true });
 
 console.log(mongoose.models);

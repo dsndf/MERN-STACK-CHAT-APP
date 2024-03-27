@@ -22,7 +22,7 @@ export const signupUser = catchAsyncError(async (req, res, next) => {
 
 export const loginUser = catchAsyncError(async (req, res, next) => {
    const { username, password } = req.body;
-   const user = await User.findOne({ username }).select("password");
+   const user = await User.findOne({ username }).select("+password");
    if (!user) return next(new ErrorHandler("Invalid Username", 400))
    if (!await validatePassword(user.password, password)) return next(new ErrorHandler("Invalid Password", 400));
    sendUserResponse(user, res, "Logged in successfully");
