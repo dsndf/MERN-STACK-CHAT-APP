@@ -5,16 +5,8 @@ import { ErrorHandler } from "../utils/ErrorHandler.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { emitEvent } from "../events/emitEvent.js";
 
-import {
-  CHAT_DELETED,
-  GROUP_CREATED,
-  GROUP_DELETED,
-  LEAVE_GROUP,
-  MEMBER_REMOVED,
-  MESSAGE_SENT,
-  REFECTH_CHATS,
-} from "../events/eventTypes.js";
-import { getOtherMembers } from "../lib/helper.js";
+import { ALERT, MESSAGE_SENT, REFECTH_CHATS } from "../events/eventTypes.js";
+import { getFileUrls, getOtherMembers } from "../lib/helper.js";
 import { Message } from "../models/message.js";
 import { createAttachments } from "../seeders/messages.js";
 
@@ -35,8 +27,8 @@ export const createNewGroup = catchAsyncError(async (req, res, next) => {
     creator: req.user._id,
   });
 
-  emitEvent(req, GROUP_CREATED, "Welcome to the" + name);
-  emitEvent(req, REFECTH_CHATS, "Refreshed");
+  emitEvent(req, ALERT, { users: members }, "Welcome to the" + name);
+  emitEvent(req, REFECTH_CHATS, { users: members });
 
   res.status(201).json({
     success: true,
@@ -76,11 +68,16 @@ export const getMyChats = catchAsyncError(async (req, res, next) => {
 });
 export const getMyGroups = catchAsyncError(async (req, res, next) => {
   const user = req.user;
-  const groups = await Chat.find({
+  let groups = await Chat.find({
     members: { $in: [user._id] },
     isGroup: true,
-  }).populate("members", "name avatar");
-
+    creator: req.user._id,
+  })
+    .populate("members", "name avatar")
+    .lean();
+  groups = groups.map((group) => {
+    return { ...group, avatar: getFileUrls(group.members, "avatar") };
+  });
   res.json({ success: true, groups });
 });
 
@@ -104,6 +101,10 @@ export const addMembers = catchAsyncError(async (req, res, next) => {
   if (!group) return next(new ErrorHandler("Group not found", 404));
   group.members.push(...members);
   group.save();
+
+  emitEvent(req, ALERT, { users: members }, `You are added into ${group.name}`);
+  emitEvent(req, REFECTH_CHATS, { user: members });
+
   res.status(201).json({
     success: true,
     message: numofMembers > 1 ? "members added" : "member added",
@@ -131,9 +132,15 @@ export const removeMember = catchAsyncError(async (req, res, next) => {
   const [{ name }] = await Promise.all([User.findById(member), group.save()]);
   const message = `${name} has been removed from ${group.name}`;
 
-  emitEvent(req, MEMBER_REMOVED, `You are removed from ${group.name}`, {
-    member,
-  });
+  emitEvent(
+    req,
+    ALERT,
+    {
+      user: member,
+    },
+    `You are removed from ${group.name}`
+  );
+  emitEvent(req, REFECTH_CHATS, { user: member });
 
   res.json({ success: true, message });
 });
@@ -157,11 +164,12 @@ export const leaveGroup = catchAsyncError(async (req, res, next) => {
 
   group.members = remainingMembers;
   await group.save();
-
-  emitEvent(req, LEAVE_GROUP, `${req.user.name} left the ${group.name}`, {
-    remainingMembers,
-  });
-
+  emitEvent(
+    req,
+    ALERT,
+    { users: remainingMembers },
+    `${req.user.name} left the ${group.name}`
+  );
   res.json({ success: true, message: "Leaved Successfully" });
 });
 
@@ -172,19 +180,23 @@ export const deleteChat = catchAsyncError(async (req, res, next) => {
   if (!chat) return next(new ErrorHandler("Chat not found", 404));
   if (String(chat.creator) !== String(req.user._id_))
     return next(new ErrorHandler("You can't delete this chat.", 403));
-  const otherMember = getOtherMembers(chat.members, req.user._id)[0];
+  const otherMember = getOtherMembers(chat.members, req.user._id);
 
   await Chat.findByIdAndDelete(chat_id);
 
-  emitEvent(req, CHAT_DELETED, `${req.user.name} has been deleted the chat.`, {
-    member: otherMember,
+  emitEvent(req, ALERT, `${req.user.name} has been deleted the chat.`, {
+    users: otherMember,
+  });
+  emitEvent(req, REFECTH_CHATS, {
+    users: [otherMember, req.user._id],
   });
 
   res.json({ success: true, message: "Leaved Successfully" });
 });
 
 export const sendAttachments = catchAsyncError(async (req, res, next) => {
-  const files = req.files;
+  const files = req.files; // will use this during cloudinary config
+
   const { content } = req.body;
 
   const { chat_id } = req.params;
@@ -197,24 +209,29 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
     ? chat.name
     : getOtherMembers(chat.members, req.user._id)[0];
 
-  const genrateMessageOFAttachmentsForRealTime = {
+  const messageOFAttachmentsForRealTime = {
     sender: { name: req.user.name, _id: req.user._id },
-    attachments,
+    attachments: getFileUrls(attachments),
     chat: chat_id,
     content,
     createdAt: new Date(),
   };
-  emitEvent(req, MESSAGE_SENT, `Message sent for chat ${chat}`, {
-    members: chat.members,
+  emitEvent(req, MESSAGE_SENT, `Message sent for chat ${chatName}`, {
+    users: chat.members,
+    message: messageOFAttachmentsForRealTime,
   });
 
-  const genrateMessageOFAttachmentsForDB = await Message.create({
+  const messageOFAttachmentsForDB = await Message.create({
     sender: req.user._id,
     attachments,
     chat: chat_id,
     content,
   });
-  res.status(201).json({ success: true, message: "sent successfully" });
+  res.status(201).json({
+    success: true,
+    message: "sent successfully",
+    messageOFAttachmentsForDB,
+  });
 });
 
 export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
@@ -229,9 +246,49 @@ export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
 
   const otherMembers = getOtherMembers(chat.members, req.user._id);
   const groupName = chat.name;
-  await Chat.findOneAndDelete({_id:group_id});
-  emitEvent(req, GROUP_DELETED, `${groupName} has been deleted`, {
+  await Chat.findOneAndDelete({ _id: group_id });
+  emitEvent(req, ALERT, `${groupName} has been deleted`, {
     members: otherMembers,
   });
+  emitEvent(req, REFECTH_CHATS, {
+    users: [...otherMembers, req.user._id],
+  });
   res.json({ success: true, message: "Group deleted successfully" });
+});
+
+export const getChatDetails = catchAsyncError(async (req, res, next) => {
+  const { chat_id } = req.params;
+  const populate = req.query.populate;
+  let query = Chat.findById(chat_id);
+
+  let { members } = await query.select("+members");
+
+  if (!members.includes(String(req.user._id))) {
+    return next(new ErrorHandler("You are not the member of this chat.", 403));
+  }
+
+  if (populate === "true") {
+    query = query.clone().populate("members", "name avatar").lean();
+  }
+  let chat = await query;
+
+  if (!chat) return next(new ErrorHandler("Chat not found", 404));
+
+  res.json({ success: true, chat });
+});
+
+export const updateGroupName = catchAsyncError(async (req, res, next) => {
+  const { name } = req.body;
+  const { group_id } = req.params;
+  const myId = req.user._id;
+  const group = await Chat.findById(group_id);
+  if (!group) return next(new ErrorHandler("Group not found.", 404));
+  if (String(group.creator) !== String(myId))
+    return next(new ErrorHandler("Group not found.", 404));
+  group.name = name;
+  await group.save();
+  emitEvent(req, REFECTH_CHATS, {
+    users: group.members,
+  });
+  res.json({ success: true, message: "Group name changed successfully" });
 });

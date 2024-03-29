@@ -11,6 +11,7 @@ const RenderAttachment = ({ file, url }) => {
           height={"150px"}
           style={{ objectFit: "contain" }}
           alt="Attachment"
+          download
         />
     case "video":
       return <video src={url} preload="none" controls width={"200px"}/>;

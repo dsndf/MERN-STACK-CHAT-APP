@@ -15,7 +15,7 @@ const Chats = lazy(() => import("./pages/Admin/Chats.jsx"));
 
 const App = () => {
   const [state, setState] = useState();
-  const [isAuth, setIsAuth] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   return (
     <Router>
@@ -36,7 +36,7 @@ const App = () => {
               <ProtectedRoute isAuth={!isAuth} redirect={"/"}>
                 <Login />
               </ProtectedRoute>
-            }
+            } 
           />
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/admin/messages" element={<Messages />} />

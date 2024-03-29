@@ -1,3 +1,3 @@
-export const emitEvent = (req, eventType, message, data) => {
+export const emitEvent = (req, eventType, data ,message) => {
   return;
 };

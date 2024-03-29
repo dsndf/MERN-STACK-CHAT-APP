@@ -27,8 +27,8 @@ app.use(cookieParser());
 app.get("/", async (req, res, next) => {
   res.json({ success: true });
 });
-app.use("/api/v1", userRouter);
-app.use("/api/v1", chatRouter);
+app.use("/api/v1/user", userRouter);
+app.use("/api/v1/chat", chatRouter);
 const server = app.listen(port, () => {
   console.log("node environment is 🌲" + process.env.NODE_ENV);
   console.log("✌ Listening at ", port);
