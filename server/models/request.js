@@ -1,24 +1,25 @@
 import mongoose, { Schema } from "mongoose";
 
-const requestSchema = new mongoose.Schema({
- sender:{
-    type:Schema.Types.ObjectId,
-    required:true,
-    ref:"User"
- },
- reciever:{
-    type:Schema.Types.ObjectId,
-    required:true,
-    ref:"User"
- },
+const requestSchema = new mongoose.Schema(
+  {
+    sender: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    reciever: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
 
- status:{
-    type:String,
-    enum:["Pending","Accepted"],
-    default:"Pending"
- },
- 
- 
-}, { timestamps: true });
+    status: {
+      type: String,
+      enum: ["Pending", "Accepted", "Denied"],
+      default: "Pending",
+    },
+  },
+  { timestamps: true }
+);
 
-export const Request =  new mongoose.model("Request",requestSchema); 
+export const Request = mongoose.models.Request || new mongoose.model("Request", requestSchema);

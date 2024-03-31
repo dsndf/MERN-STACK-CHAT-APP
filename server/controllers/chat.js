@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Error, Types } from "mongoose";
 import { Chat } from "../models/chat.js";
 import { User } from "../models/user.js";
 import { ErrorHandler } from "../utils/ErrorHandler.js";
@@ -277,18 +277,31 @@ export const getChatDetails = catchAsyncError(async (req, res, next) => {
   res.json({ success: true, chat });
 });
 
-export const updateGroupName = catchAsyncError(async (req, res, next) => {
+export const editGroupName = catchAsyncError(async (req, res, next) => {
   const { name } = req.body;
   const { group_id } = req.params;
   const myId = req.user._id;
   const group = await Chat.findById(group_id);
   if (!group) return next(new ErrorHandler("Group not found.", 404));
   if (String(group.creator) !== String(myId))
-    return next(new ErrorHandler("Group not found.", 404));
+    return next(new ErrorHandler("Only group admin is allowed.", 403));
   group.name = name;
   await group.save();
   emitEvent(req, REFECTH_CHATS, {
     users: group.members,
   });
   res.json({ success: true, message: "Group name changed successfully" });
+});
+
+export const getMessages = catchAsyncError(async (req, res, next) => {
+  const { chat_id } = req.params;
+  const me= req.user._id;
+
+  const chat = await Chat.findById(chat_id);
+  if (!chat.members.includes(me)) {
+    return next(new ErrorHandler("You don't have access to this chat", 403));
+  }
+  const messages = await Message.find({ chat: chat_id });
+  const totalMessages = messages.length;
+  res.json({ success: true,totalMessages, messages });
 });

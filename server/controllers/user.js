@@ -1,3 +1,7 @@
+import { cookieOptions } from "../constants/cookie.js";
+import { emitEvent } from "../events/emitEvent.js";
+import { NOTIFICATION } from "../events/eventTypes.js";
+import { Request } from "../models/request.js";
 import { User } from "../models/user.js";
 import { ErrorHandler } from "../utils/ErrorHandler.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
@@ -38,3 +42,108 @@ export const getMyProfile = catchAsyncError(async (req, res, next) => {
 
   res.json({ success: true, profile });
 });
+
+export const searchUsers = catchAsyncError(async (req, res, next) => {
+  const { keyword } = req.query;
+
+  if (!keyword)
+    return next(new ErrorHandler("Keyword is required to search users.", 400));
+
+  const users = await User.find({ name: { $regex: keyword, $options: "i" } });
+
+  const message = users.length + " users found for keyword " + keyword;
+  res.json({ success: true, message, users });
+});
+
+export const sendFreindRequest = catchAsyncError(async (req, res, next) => {
+  const { users } = req.body;
+  const me = req.user._id;
+
+  if (!users || !users.length)
+    return next(
+      new ErrorHandler("Required at least one user to send friend request", 400)
+    );
+
+  const promises = [];
+
+  for (let id of users) {
+    const user = await User.findById(id);
+    if (!user) {
+      return next(
+        new ErrorHandler("User with userId " + id + " not found", 400)
+      );
+    }
+    const request = await Request.findOne({
+      $or: [
+        { sender: me, reciever: id },
+        { sender: id, reciever: me },
+      ],
+    });
+    if (request) {
+      return next(new ErrorHandler(`Request had already been sent.`, 409));
+    }
+    promises.push(Request.create({ sender: me, reciever: id }));
+  }
+  const requests = await Promise.all(promises);
+  emitEvent(req, NOTIFICATION, { users }, "Notification recieved");
+  res.status(201).json({ suucess: true, requests });
+});
+
+export const getMyNotifications = catchAsyncError(async (req, res, next) => {
+  const me = req.user._id;
+
+  const notifications = await Request.find({
+    $and: [
+      { reciever: me },
+      { $or: [{ status: "Pending" }, { status: "Accepted" }] },
+    ],
+  });
+  const newNotifications = notifications.filter(
+    (notification) => notification.status === "Pending"
+  );
+  const otherNotifications = notifications.filter(
+    (notification) => notification.status !== "Pending"
+  );
+  const noOfNewNotifications = newNotifications.length;
+
+  res.json({
+    success: true,
+    noOfNewNotifications,
+    newNotifications,
+    otherNotifications,
+    me,
+  });
+});
+
+export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
+  const { reply } = req.body;
+  const { id } = req.params;
+  const me = req.user._id;
+
+  const request = await Request.findById(id);
+  if (!request) {
+    return next(new ErrorHandler("Request not found", 404));
+  }
+  if (String(request.reciever) !== String(me)) {
+    return next(new ErrorHandler("You are not allowed to rely.", 403));
+  }
+  if (request.status !== "Pending") {
+    return next(new ErrorHandler("You already replied.", 409));
+  }
+  request.status = reply;
+  req.user.friends.push(request.sender);
+
+  const [, sender] = await Promise.all([
+    request.save(),
+    User.findById(request.sender),
+    req.user.save(),
+  ]);
+
+  res.json({ success: true, message: "Replied successfully.", sender });
+});
+
+
+export const logoutUser = catchAsyncError(async (req,res,next)=>{
+  res.clearCookie("chatIoToken",cookieOptions);
+  res.json({success:true,message:"Logged out successfully"});
+})

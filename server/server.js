@@ -6,7 +6,8 @@ import { ErrorHandler } from "./utils/ErrorHandler.js";
 import cookieParser from "cookie-parser";
 import { userRouter } from "./routers/userRouter.js";
 import { chatRouter } from "./routers/chatRouter.js";
-import { createUsers } from "./seeders/users.js";
+import { createMessages } from "./seeders/messages.js";
+// import { createUsers } from "./seeders/users.js";
 
 process.on("uncaughtException", (err) => {
   console.log("👿 " + err.message);
@@ -17,7 +18,9 @@ const app = express();
 dotenv.config({ path: "./.env" });
 
 connectDB(process.env.MONGODB_URI);
+
 // createUsers(10);
+// createMessages(15);
 
 const port = process.env.PORT || 4000;
 

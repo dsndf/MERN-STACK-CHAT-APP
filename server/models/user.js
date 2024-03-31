@@ -36,7 +36,6 @@ const userSchema = new mongoose.Schema({
     friends:[{type:Schema.Types.ObjectId,ref:'User'}]
 }, { timestamps: true });
 
-console.log(mongoose.models);
 
 userSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
@@ -52,6 +51,6 @@ userSchema.methods.generateAuthToken = async function () {
 }
 
 
-export const User = new mongoose.model("User", userSchema);
+export const User = mongoose.models.User ||  new mongoose.model("User", userSchema);
 
 
