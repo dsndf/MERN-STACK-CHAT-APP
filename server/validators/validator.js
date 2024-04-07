@@ -1,7 +1,7 @@
 import { validationResult } from "express-validator";
 import { ErrorHandler } from "../utils/errorHandler.js";
 
-export const validator = (req, res, next) => {
+export const validateHandler = (req, res, next) => {
     const errors = validationResult(req);
     
     if (!errors.isEmpty()) {

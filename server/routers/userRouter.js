@@ -9,18 +9,24 @@ import {
   getMyNotifications,
   replyfriendRequest,
   logoutUser,
+  getMyFriends,
 } from "../controllers/user.js";
 import { authentication } from "../middlewares/authentication.js";
-import { loginValidator, signupValidator } from "../validators/user.js";
-import { validator } from "../validators/validator.js";
+import {
+  loginValidator,
+  replyFriendRequestValidator,
+  sendFriendRequestValidator,
+  signupValidator,
+} from "../validators/user.js";
+import { validateHandler } from "../validators/validator.js";
 
 export const userRouter = express.Router();
 
 userRouter
   .route("/signup")
-  .post(singleAvatar, signupValidator(), validator, signupUser);
+  .post(singleAvatar, signupValidator(), validateHandler, signupUser);
 
-userRouter.route("/login").post(loginValidator(),validator,loginUser);
+userRouter.route("/login").post(loginValidator(), validateHandler, loginUser);
 
 // Authenticated routing....
 
@@ -30,10 +36,16 @@ userRouter.route("/profile").get(getMyProfile);
 
 userRouter.route("/search").get(searchUsers);
 
-userRouter.route("/send/friend/request").post(sendFreindRequest);
+userRouter
+  .route("/send/friend/request")
+  .post(sendFriendRequestValidator(), validateHandler, sendFreindRequest);
 
 userRouter.route("/notifications").get(getMyNotifications);
 
-userRouter.route("/reply/friend/request/:id").patch(replyfriendRequest);
+userRouter
+  .route("/reply/friend/request/:id")
+  .patch(replyFriendRequestValidator(), validateHandler, replyfriendRequest);
 
 userRouter.route("/logout").get(logoutUser);
+
+userRouter.route("/friends").get(getMyFriends);

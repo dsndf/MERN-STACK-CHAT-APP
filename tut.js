@@ -1,9 +1,1 @@
-let myEveryFunction = function(cb){
-    
-   let ans = true;
-   for(let i of arr){
-    ans = ans && cb(i);
-   }
-    return ans;
-
-}
+console.log(String(new Date(Date.now()-2*24*60*60*1000)));

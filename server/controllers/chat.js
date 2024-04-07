@@ -1,14 +1,12 @@
-import { Error, Types } from "mongoose";
 import { Chat } from "../models/chat.js";
 import { User } from "../models/user.js";
-import { ErrorHandler } from "../utils/ErrorHandler.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { emitEvent } from "../events/emitEvent.js";
-
 import { ALERT, MESSAGE_SENT, REFECTH_CHATS } from "../events/eventTypes.js";
 import { getFileUrls, getOtherMembers } from "../lib/helper.js";
 import { Message } from "../models/message.js";
 import { createAttachments } from "../seeders/messages.js";
+import { ErrorHandler } from "../utils/errorHandler.js";
 
 export const createNewGroup = catchAsyncError(async (req, res, next) => {
   let { name, members, isGroup } = req.body;
@@ -16,7 +14,6 @@ export const createNewGroup = catchAsyncError(async (req, res, next) => {
   if (!isGroup)
     return next(new ErrorHandler("Request denied to create group.", 400));
   if (!name) return next(new ErrorHandler("Group name is missing.", 400));
-
   if (members.length < 3)
     return next(new ErrorHandler("Group must have at least 3 members.", 422));
 
@@ -38,22 +35,21 @@ export const createNewGroup = catchAsyncError(async (req, res, next) => {
 });
 
 export const getMyChats = catchAsyncError(async (req, res, next) => {
-  const user = req.user;
-  let chats = await Chat.find({ members: { $in: [user._id] } }).populate(
-    "members",
-    "name avatar"
-  );
+  const me = req.user._id;
+  let chats = await Chat.find({ members: me })
+    .populate("members", "name avatar")
+    .lean();
 
   chats = chats.map((chat) => {
     let membersAvatars = chat.members.reduce(
       (acc, member) => [...acc, member.avatar],
       []
     );
-
+    console.log({ members: chat.members });
     let singleReciever =
       !chat.isGroup &&
       chat.members.find((member) => {
-        if (String(member._id) !== String(user._id)) return member;
+        if (String(member._id) !== String(me)) return member;
       });
     console.log({ singleReciever });
     return {
@@ -66,6 +62,7 @@ export const getMyChats = catchAsyncError(async (req, res, next) => {
 
   res.json({ success: true, chats });
 });
+
 export const getMyGroups = catchAsyncError(async (req, res, next) => {
   const user = req.user;
   let groups = await Chat.find({
@@ -73,11 +70,16 @@ export const getMyGroups = catchAsyncError(async (req, res, next) => {
     isGroup: true,
     creator: req.user._id,
   })
-    .populate("members", "name avatar")
+    .populate("members", "avatar")
     .lean();
   groups = groups.map((group) => {
-    return { ...group, avatar: getFileUrls(group.members, "avatar") };
+    return {
+      ...group,
+      avatar: getFileUrls(group.members, "avatar"),
+      members: undefined,
+    };
   });
+
   res.json({ success: true, groups });
 });
 
@@ -94,35 +96,45 @@ export const createNewChat = catchAsyncError(async (req, res, next) => {
 });
 
 export const addMembers = catchAsyncError(async (req, res, next) => {
-  const { members } = req.body;
+  const { members, chat_id } = req.body;
   const numofMembers = members.length;
-  const { group_id } = req.params;
-  const group = await Chat.findById(group_id);
+
+  const group = await Chat.findOne({
+    _id: chat_id,
+    members: { $nin: members },
+    isGroup: true,
+  });
+
   if (!group) return next(new ErrorHandler("Group not found", 404));
+  if (String(req.user._id) !== String(group.creator))
+    return next(new ErrorHandler("Only group admin can remove member", 403));
   group.members.push(...members);
   group.save();
 
   emitEvent(req, ALERT, { users: members }, `You are added into ${group.name}`);
   emitEvent(req, REFECTH_CHATS, { user: members });
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     message: numofMembers > 1 ? "members added" : "member added",
   });
 });
 
 export const removeMember = catchAsyncError(async (req, res, next) => {
-  const { group_id } = req.params;
-  const { member } = req.body;
+  const { member, chat_id } = req.body;
 
-  const group = await Chat.findById(group_id);
+  const group = await Chat.findOne({
+    _id: chat_id,
+    members: member,
+    isGroup: true,
+  });
   if (!group) return next(new ErrorHandler("Group not found", 404));
   if (!group.isGroup)
     return next(new ErrorHandler("This is not a group chat", 400));
 
-  if (req.user._id !== group.creator)
+  if (String(req.user._id) !== String(group.creator))
     return next(new ErrorHandler("Only group admin can remove member", 403));
-  const remainingMembers = getOtherMembers(chat.members, member);
+  const remainingMembers = getOtherMembers(group.members, member);
 
   if (remainingMembers.length < 3)
     return next(new ErrorHandler("Group must have at least 3 members.", 422));
@@ -146,19 +158,17 @@ export const removeMember = catchAsyncError(async (req, res, next) => {
 });
 
 export const leaveGroup = catchAsyncError(async (req, res, next) => {
-  const { group_id } = req.params;
-  const group = await Chat.findById(group_id);
+  const { chat_id } = req.params;
+  const group = await Chat.findOne({ _id: chat_id, isGroup: true });
 
   if (!group) return next(new ErrorHandler("Group not found", 404));
-  if (!group.isGroup)
-    return next(new ErrorHandler("This is not a group chat", 400));
 
   const remainingMembers = getOtherMembers(group.members, req.user._id);
-
+  console.log({remainingMembers})
   if (remainingMembers.length < 3)
     return next(new ErrorHandler("Group must have at least 3 members.", 422));
 
-  if (req.user._id === group.creator) {
+  if (String(req.user._id) === String(group.creator)) {
     group.creator = remainingMembers[0];
   }
 
@@ -170,7 +180,7 @@ export const leaveGroup = catchAsyncError(async (req, res, next) => {
     { users: remainingMembers },
     `${req.user.name} left the ${group.name}`
   );
-  res.json({ success: true, message: "Leaved Successfully" });
+  res.json({ success: true, message: "Leaved Successfully", remainingMembers });
 });
 
 export const deleteChat = catchAsyncError(async (req, res, next) => {
@@ -235,18 +245,20 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
 });
 
 export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
-  const { group_id } = req.params;
-  const chat = await Chat.findById(group_id);
+  const { chat_id } = req.params;
+  const chat = await Chat.findById(chat_id);
 
-  if (!chat) return next(new ErrorHandler("Chat not found", 404));
-  if (!chat.isGroup)
-    return next(new ErrorHandler("This is not a group chat", 400));
+  if (!chat || !chat.isGroup)
+    return next(new ErrorHandler("Chat not found", 404));
+
   if (String(chat.creator) !== String(req.user._id))
-    return next(new ErrorHandler("You can't delete this chat.", 403));
+    return next(
+      new ErrorHandler("Only group creator can delete this group chat", 403)
+    );
 
   const otherMembers = getOtherMembers(chat.members, req.user._id);
   const groupName = chat.name;
-  await Chat.findOneAndDelete({ _id: group_id });
+  await Chat.findOneAndDelete({ _id: chat_id });
   emitEvent(req, ALERT, `${groupName} has been deleted`, {
     members: otherMembers,
   });
@@ -259,29 +271,28 @@ export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
 export const getChatDetails = catchAsyncError(async (req, res, next) => {
   const { chat_id } = req.params;
   const populate = req.query.populate;
+
   let query = Chat.findById(chat_id);
+  let chat = await query;
+  const { members } = chat;
 
-  let { members } = await query.select("+members");
-
+  if (!chat) return next(new ErrorHandler("Chat not found", 404));
   if (!members.includes(String(req.user._id))) {
     return next(new ErrorHandler("You are not the member of this chat.", 403));
   }
 
   if (populate === "true") {
     query = query.clone().populate("members", "name avatar").lean();
+    chat = await query;
   }
-  let chat = await query;
-
-  if (!chat) return next(new ErrorHandler("Chat not found", 404));
-
   res.json({ success: true, chat });
 });
 
 export const editGroupName = catchAsyncError(async (req, res, next) => {
   const { name } = req.body;
-  const { group_id } = req.params;
+  const { chat_id } = req.params;
   const myId = req.user._id;
-  const group = await Chat.findById(group_id);
+  const group = await Chat.findOne({ _id: chat_id, isGroup: true });
   if (!group) return next(new ErrorHandler("Group not found.", 404));
   if (String(group.creator) !== String(myId))
     return next(new ErrorHandler("Only group admin is allowed.", 403));
@@ -295,13 +306,14 @@ export const editGroupName = catchAsyncError(async (req, res, next) => {
 
 export const getMessages = catchAsyncError(async (req, res, next) => {
   const { chat_id } = req.params;
-  const me= req.user._id;
+  const me = req.user._id;
 
   const chat = await Chat.findById(chat_id);
   if (!chat.members.includes(me)) {
     return next(new ErrorHandler("You don't have access to this chat", 403));
   }
+
   const messages = await Message.find({ chat: chat_id });
   const totalMessages = messages.length;
-  res.json({ success: true,totalMessages, messages });
+  res.json({ success: true, totalMessages, messages });
 });

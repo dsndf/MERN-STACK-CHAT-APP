@@ -1,6 +1,8 @@
 import { cookieOptions } from "../constants/cookie.js";
 import { emitEvent } from "../events/emitEvent.js";
-import { NOTIFICATION } from "../events/eventTypes.js";
+import { ALERT, NOTIFICATION } from "../events/eventTypes.js";
+import { getOtherMembers } from "../lib/helper.js";
+import { Chat } from "../models/chat.js";
 import { Request } from "../models/request.js";
 import { User } from "../models/user.js";
 import { ErrorHandler } from "../utils/ErrorHandler.js";
@@ -33,25 +35,24 @@ export const loginUser = catchAsyncError(async (req, res, next) => {
 });
 
 export const getMyProfile = catchAsyncError(async (req, res, next) => {
-  const me = req.user._id;
-
-  const profile = await User.findById(me);
-  if (!profile) {
-    return next(new ErrorHandler("Profile not found", 404));
-  }
-
+  const profile = req.user;
   res.json({ success: true, profile });
 });
 
 export const searchUsers = catchAsyncError(async (req, res, next) => {
   const { keyword } = req.query;
 
-  if (!keyword)
-    return next(new ErrorHandler("Keyword is required to search users.", 400));
+  const myFriends = req.user.friends;
+  let users = await User.find({
+    name: { $regex: keyword || "", $options: "i" },
+    _id: { $nin: myFriends },
+  }).select({ name: true, avatar: { url: true } });
 
-  const users = await User.find({ name: { $regex: keyword, $options: "i" } });
+  users = users.map((user) => {
+    return { name: user.name, _id: user._id, avatar: user.avatar.url };
+  });
 
-  const message = users.length + " users found for keyword " + keyword;
+  const message = users.length + " users found";
   res.json({ success: true, message, users });
 });
 
@@ -111,7 +112,6 @@ export const getMyNotifications = catchAsyncError(async (req, res, next) => {
     noOfNewNotifications,
     newNotifications,
     otherNotifications,
-    me,
   });
 });
 
@@ -125,25 +125,59 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Request not found", 404));
   }
   if (String(request.reciever) !== String(me)) {
-    return next(new ErrorHandler("You are not allowed to rely.", 403));
+    return next(new ErrorHandler("You are not allowed to reply.", 403));
   }
   if (request.status !== "Pending") {
     return next(new ErrorHandler("You already replied.", 409));
   }
   request.status = reply;
-  req.user.friends.push(request.sender);
+  if (reply === "Accepted") {
+    req.user.friends.push(request.sender);
+    const [sender] = await Promise.all([
+      User.findById(request.sender),
+      req.user.save(),
+      Chat.create({
+        name: `${request.sender}-${request.reciever}`,
+        members: [request.sender, request.reciever],
+        creator: request.reciever,
+      }),
+    ]);
+    sender.friends.push(req.user._id);
+    await sender.save();
+  }
 
-  const [, sender] = await Promise.all([
-    request.save(),
-    User.findById(request.sender),
-    req.user.save(),
-  ]);
-
-  res.json({ success: true, message: "Replied successfully.", sender });
+  await request.save();
+  emitEvent(
+    req,
+    ALERT,
+    { users: [request.sender] },
+    `${req.user.name} accepted friend request`
+  );
+  res.json({ success: true, message: "Replied successfully." });
 });
 
+export const logoutUser = catchAsyncError(async (req, res, next) => {
+  res.clearCookie("chatIoToken", cookieOptions);
+  res.json({ success: true, message: "Logged out successfully" });
+});
 
-export const logoutUser = catchAsyncError(async (req,res,next)=>{
-  res.clearCookie("chatIoToken",cookieOptions);
-  res.json({success:true,message:"Logged out successfully"});
-})
+export const getMyFriends = catchAsyncError(async (req, res, next) => {
+  const me = req.user._id;
+  const { chat_id } = req.query;
+  let friends = [];
+  if (chat_id) {
+    const chat = await Chat.findById(chat_id).populate(
+      "members",
+      "name avatar"
+    );
+    if (!chat) return next(new ErrorHandler("Chat not found", 404));
+    friends = getOtherMembers(chat.members, me);
+  }
+  friends = await User.findById({ _id: me })
+    .populate("friends", "name avatar")
+    .select("friends");
+  res.json({
+    success: true,
+    friends,
+  });
+});
