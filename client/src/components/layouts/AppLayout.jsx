@@ -1,4 +1,3 @@
-import ChatListItem from "../shared/ChatListItem";
 import {
   StyledChatListColumn,
   StyledProfileColumn,
@@ -10,7 +9,7 @@ import { useTheme } from "@emotion/react";
 import Profile from "../specific/Profile";
 import ChatList from "../specific/ChatList";
 import { useParams } from "react-router-dom";
-import { useEffect } from "react";
+
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {

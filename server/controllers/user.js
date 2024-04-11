@@ -1,4 +1,4 @@
-import { cookieOptions } from "../constants/cookie.js";
+import { tokenCookieOptions } from "../constants/cookie.js";
 import { emitEvent } from "../events/emitEvent.js";
 import { ALERT, NOTIFICATION } from "../events/eventTypes.js";
 import { getOtherMembers } from "../lib/helper.js";
@@ -157,7 +157,7 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
 });
 
 export const logoutUser = catchAsyncError(async (req, res, next) => {
-  res.clearCookie("chatIoToken", cookieOptions);
+  res.clearCookie("chatIoToken", tokenCookieOptions);
   res.json({ success: true, message: "Logged out successfully" });
 });
 

@@ -226,7 +226,7 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
     content,
     createdAt: new Date(),
   };
-  emitEvent(req, MESSAGE_SENT, `Message sent for chat ${chatName}`, {
+  emitEvent(req, MESSAGE_SENT, `Message sent to ${chatName}`, {
     users: chat.members,
     message: messageOFAttachmentsForRealTime,
   });

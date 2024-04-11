@@ -1,10 +1,10 @@
-import { cookieOptions } from "../constants/cookie.js";
+import {  tokenCookieOptions} from "../constants/cookie.js";
 
 export const sendUserResponse = async (user, res, message) => {
   const chatIoToken = await user.generateAuthToken();
   user.password = undefined;
 
-  res.cookie("chatIoToken", chatIoToken, cookieOptions).json({
+  res.cookie("chatIoToken", chatIoToken, tokenCookieOptions).json({
     success: true,
     message,
     user,

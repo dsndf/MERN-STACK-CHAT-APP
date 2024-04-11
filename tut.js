@@ -1,1 +1,1 @@
-console.log(String(new Date(Date.now()-2*24*60*60*1000)));
+console.log(String(new Date().getDay()));

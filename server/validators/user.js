@@ -1,4 +1,4 @@
-import { body, check} from "express-validator";
+import { body,buildCheckFunction ,check} from "express-validator";
 
 export const signupValidator = () => {
   return [
@@ -22,4 +22,15 @@ export const sendFriendRequestValidator = ()=>{
 }
 export const replyFriendRequestValidator = ()=>{
   return body('reply',"Please provide reply to the request").notEmpty();
+}
+
+
+export const validateAdminLogin = ()=>{
+  return  body('passkey','Admin pass key is required');
+}
+export const checkAdminAuthorization = (field)=>{
+ return (value , {req})=>{
+  console.log(req.body[field]);
+  return true;
+ }
 }

@@ -31,7 +31,9 @@ import { validateHandler } from "../validators/validator.js";
 export const chatRouter = express.Router();
 
 chatRouter.use(authentication);
- chatRouter.route("/new/group").post(createGroupValidator() , validateHandler , createNewGroup);
+chatRouter
+  .route("/new/group")
+  .post(createGroupValidator(), validateHandler, createNewGroup);
 // chatRouter.route("/new").post(createNewChat); // need a look
 chatRouter.route("/my/chats").get(getMyChats);
 chatRouter.route("/my/groups").get(getMyGroups);
@@ -51,7 +53,7 @@ chatRouter
   );
 chatRouter
   .route("/edit/group/name/:chat_id")
-  .patch(editGroupNameValidator(),validateHandler, editGroupName);
+  .patch(editGroupNameValidator(), validateHandler, editGroupName);
 chatRouter
   .route("/:chat_id")
   .get(chatIdValidator(), validateHandler, getChatDetails)
