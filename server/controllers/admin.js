@@ -3,6 +3,25 @@ import { User } from "../models/user.js";
 import { Chat } from "../models/chat.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { getFileUrls } from "../lib/helper.js";
+import { sendAdminResponse } from "../utils/sendAdminResponse.js";
+import { tokenCookieOptions } from "../constants/cookie.js";
+
+export const adminLogin = catchAsyncError((req, res, next) => {
+  const { passkey } = req.body;
+  console.log({ passkey });
+  if (!(passkey === process.env.ADMIN_SECRET_KEY)) {
+    return next(new ErrorHandler("Invalid passkey", 400));
+  }
+  sendAdminResponse(res, "Logged in successfully");
+});
+
+export const adminLogout = catchAsyncError((req, res, next) => {
+  res.clearCookie("chatIO-admin-token", tokenCookieOptions);
+  res.json({
+    success: true,
+    message: "Logged out successfully",
+  });
+});
 
 export const getAdminStats = catchAsyncError(async (req, res, next) => {
   const currentDay = new Date();

@@ -6,7 +6,6 @@ export const signupValidator = () => {
     body("name", "Please enter name").notEmpty(),
     body("password", "Please enter password").notEmpty(),
     body("bio", "Please enter bio").notEmpty(),
-    check("avatar").notEmpty().withMessage("Avatar is not provided")
   ];
 };
 
@@ -26,11 +25,11 @@ export const replyFriendRequestValidator = ()=>{
 
 
 export const validateAdminLogin = ()=>{
-  return  body('passkey','Admin pass key is required');
+  return body('passkey','Admin pass key is required').notEmpty();
 }
 export const checkAdminAuthorization = (field)=>{
  return (value , {req})=>{
   console.log(req.body[field]);
   return true;
  }
-}
+} 

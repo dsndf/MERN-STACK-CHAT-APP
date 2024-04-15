@@ -1,1 +1,0 @@
-console.log(String(new Date().getDay()));

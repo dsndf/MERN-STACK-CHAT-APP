@@ -1,14 +1,17 @@
-import express from 'express';
+import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./db/connectDB.js";
 import { customErrorHandler } from "./middlewares/customErrorHandler.js";
-import { ErrorHandler } from "./utils/ErrorHandler.js";
+// import { ErrorHandler } from "./utils/ErrorHandler.js";
 import cookieParser from "cookie-parser";
 import { userRouter } from "./routers/userRouter.js";
 import { chatRouter } from "./routers/chatRouter.js";
-import { createMessages } from "./seeders/messages.js";
-import { adminRouter } from './routers/adminRouter.js';
+import { adminRouter } from "./routers/adminRouter.js";
+
+// ............SEEDERS...........
 // import { createUsers } from "./seeders/users.js";
+// import { createMessages } from "./seeders/messages.js";
+// ............**SEEDERS**...........
 
 process.on("uncaughtException", (err) => {
   console.log("👿 " + err.message);
@@ -33,7 +36,6 @@ app.get("/", async (req, res, next) => {
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/admin", adminRouter);
-
 
 const server = app.listen(port, () => {
   console.log("node environment is 🌲" + process.env.NODE_ENV);

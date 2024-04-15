@@ -13,11 +13,8 @@ import { validatePassword } from "../utils/validatePassword.js";
 export const signupUser = catchAsyncError(async (req, res, next) => {
   const { name, username, bio, password } = req.body;
   const file = req.file;
+  if (!file) return next(new ErrorHandler("Avatar is required",400));
   console.log(Object.keys(file));
-
-  const isExist = await User.findOne({ username });
-
-  if (isExist) next(new ErrorHandler("User already exists.", 409));
 
   const user = await User.create({ name, username, bio, password });
   res.statusCode = 201;
