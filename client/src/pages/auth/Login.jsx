@@ -1,6 +1,8 @@
 import {
   Avatar,
+  Box,
   Button,
+  CircularProgress,
   Container,
   IconButton,
   Paper,
@@ -9,28 +11,57 @@ import {
   Typography,
 } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { VisuallyHiddenInput } from "../../components/style/StyleComponent";
 import { useInputValidation } from "6pp";
 import { useAvatar } from "../../hooks/useAvatar";
 import Title from "../../components/shared/Title";
+import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector";
+import { loginUser, registerUser } from "../../redux/slices/authSlice";
+import { validatePassword } from "../../validators/validatePassword";
+import { validateUsername } from "../../validators/validateUsername";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+
 
 const Login = () => {
   const [registerToggle, setRegisterToggle] = useState(false);
   const { avatar, avatarChangeHandler, avatarPreview } = useAvatar();
-
+  const {
+    dispatch,
+    state: { loading},
+  } = useDispatchAndSelector("auth");
   const name = useInputValidation("");
-  const email = useInputValidation("");
-  const password = useInputValidation("");
+  const username = useInputValidation("", validateUsername);
+  const password = useInputValidation("", validatePassword);
   const bio = useInputValidation("");
- 
-  const loginEmail = useInputValidation("");
+
+  const loginUsername = useInputValidation("");
   const loginPassword = useInputValidation("");
+  const navigate = useNavigate();
 
   const registerToggleHandler = () => {
     setRegisterToggle(!registerToggle);
   };
-
+  const loginHandler = (e) => {
+    e.preventDefault();
+    dispatch(
+      loginUser({
+        username: loginUsername.value,
+        password: loginPassword.value,
+      })
+    );
+  };
+  const registerHandler = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("username", username.value);
+    formData.append("name", name.value);
+    formData.append("bio", bio.value);
+    formData.append("password", password.value);
+    formData.append("avatar", avatar);
+    dispatch(registerUser(formData));
+  };
   return (
     <div
       style={{
@@ -43,7 +74,7 @@ const Login = () => {
           "linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%",
       }}
     >
-      <Title title={'Login'}  description={'ChatIO login'}/>
+      <Title title={"Login"} description={"ChatIO login"} />
       <Container component={"main"} maxWidth={"xs"}>
         <Paper
           elevation={3}
@@ -57,17 +88,21 @@ const Login = () => {
           <Typography variant="h5" className="roboto-black">
             {!registerToggle ? "LOGIN" : "REGISTER"}
           </Typography>
-          <form>
-            {registerToggle ? (
+          <Box component={"div"}></Box>
+
+          {!registerToggle ? (
+            <form onSubmit={loginHandler}>
+              {" "}
               <>
+                {" "}
                 <TextField
-                  type="email"
-                  label="Email"
+                  type="username"
+                  label="Username"
                   variant="outlined"
                   fullWidth={true}
                   margin="normal"
-                  value={loginEmail.value}
-                  onChange={loginEmail.changeHandler}
+                  value={loginUsername.value}
+                  onChange={loginUsername.changeHandler}
                 />
                 <TextField
                   type="password"
@@ -83,8 +118,19 @@ const Login = () => {
                   fullWidth
                   sx={{ margin: "1rem 0" }}
                   color="primary"
+                  type="submit"
+                  disabled={loading}
                 >
                   Login
+                  {loading && (
+                    <CircularProgress
+                      size={25}
+                      sx={{
+                        zIndex: 1,
+                        position: "absolute",
+                      }}
+                    />
+                  )}
                 </Button>
                 <Typography variant="p" display={"block"} textAlign={"center"}>
                   OR
@@ -98,7 +144,10 @@ const Login = () => {
                   register instead
                 </Button>
               </>
-            ) : (
+            </form>
+          ) : (
+            <form encType="multipart/form-data" onSubmit={registerHandler}>
+              {" "}
               <>
                 <Stack alignItems={"center"} position={"relative"}>
                   <Avatar
@@ -121,6 +170,7 @@ const Login = () => {
                   </IconButton>
                   <VisuallyHiddenInput
                     type="file"
+                    accept="image/*"
                     onChange={avatarChangeHandler}
                   />
                 </Stack>
@@ -148,16 +198,35 @@ const Login = () => {
                   onChange={bio.changeHandler}
                 />
                 <TextField
-                  type="email"
+                  type="username"
                   variant="outlined"
                   margin="normal"
-                  label="Email"
+                  label="Username"
                   fullWidth
                   required
                   size="small"
-                  value={email.value}
-                  onChange={email.changeHandler}
+                  value={username.value}
+                  onChange={username.changeHandler}
                 />
+                {username.error && (
+                  <Typography
+                    sx={{ color: "red" }}
+                    fontSize={15}
+                    component={"small"}
+                  >
+                    {username.error}
+                  </Typography>
+                )}
+                {!username.error && username.value && (
+                  <Typography
+                    sx={{ color: "green" }}
+                    fontSize={15}
+                    component={"small"}
+                  >
+                    Username pattern matched
+                  </Typography>
+                )}
+
                 <TextField
                   type="password"
                   variant="outlined"
@@ -169,14 +238,42 @@ const Login = () => {
                   value={password.value}
                   onChange={password.changeHandler}
                 />
-
+                {password.error && (
+                  <Typography
+                    sx={{ color: "red" }}
+                    fontSize={15}
+                    component={"small"}
+                  >
+                    {password.error}
+                  </Typography>
+                )}
+                {!password.error && password.value && (
+                  <Typography
+                    sx={{ color: "green" }}
+                    fontSize={15}
+                    component={"small"}
+                  >
+                    Password pattern matched
+                  </Typography>
+                )}
                 <Button
-                  type="submit"
                   variant="contained"
                   fullWidth
                   sx={{ margin: "1rem 0" }}
+                  color="primary"
+                  type="submit"
+                  disabled={loading}
                 >
-                  register
+                  Register
+                  {loading && (
+                    <CircularProgress
+                      size={25}
+                      sx={{
+                        zIndex: 1,
+                        position: "absolute",
+                      }}
+                    />
+                  )}
                 </Button>
                 <Typography variant="p" display={"block"} textAlign={"center"}>
                   OR
@@ -190,8 +287,8 @@ const Login = () => {
                   login instead
                 </Button>
               </>
-            )}
-          </form>
+            </form>
+          )}
         </Paper>
       </Container>
     </div>

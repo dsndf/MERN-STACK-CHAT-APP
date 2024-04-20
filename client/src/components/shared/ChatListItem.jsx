@@ -4,12 +4,12 @@ import { headerBg, mainBg, onlineColor, selected } from "../../constants/color";
 import { Handshake } from "@mui/icons-material";
 
 const ChatListItem = ({
-  avatar = [1, 2,4,5,6],
+  avatar = [1, 2, 4, 5, 6],
   name,
   _id,
   groupChat = false,
   sameSender,
-  isOnline, 
+  isOnline,
   newMessage,
   index = 0,
   handleDeleteChatOpen,
@@ -18,7 +18,7 @@ const ChatListItem = ({
   return (
     <Card variant="outlined" sx={{ bgcolor: isSelected && selected }}>
       <CardHeader
-        title="Abi Singh"
+        title={name}
         subheader="Last message."
         titleTypographyProps={{ fontWeight: 600 }}
         avatar={
@@ -28,8 +28,8 @@ const ChatListItem = ({
                 avatar.map((av, i) => {
                   return (
                     <Avatar
-                      key={i}
-                      src="https://www.gravatar.com/avatar/1b8fabaa8d66250a7049bdb9ecf44397?s=250&d=mm&r=x"
+                      key={av?.public_id}
+                      src={av?. url}
                     />
                   );
                 })}

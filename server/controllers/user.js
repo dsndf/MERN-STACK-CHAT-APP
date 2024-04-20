@@ -1,7 +1,11 @@
 import { tokenCookieOptions } from "../constants/cookie.js";
 import { emitEvent } from "../events/emitEvent.js";
 import { ALERT, NOTIFICATION } from "../events/eventTypes.js";
-import { getOtherMembers } from "../lib/helper.js";
+import {
+  cloudinaryInstance,
+  getDataUri,
+  getOtherMembers,
+} from "../lib/helper.js";
 import { Chat } from "../models/chat.js";
 import { Request } from "../models/request.js";
 import { User } from "../models/user.js";
@@ -13,12 +17,23 @@ import { validatePassword } from "../utils/validatePassword.js";
 export const signupUser = catchAsyncError(async (req, res, next) => {
   const { name, username, bio, password } = req.body;
   const file = req.file;
-  if (!file) return next(new ErrorHandler("Avatar is required",400));
-  console.log(Object.keys(file));
-
-  const user = await User.create({ name, username, bio, password });
+  if (!file) return next(new ErrorHandler("Avatar is required", 400));
+  const user = await User.create({
+    name,
+    username,
+    bio,
+    password,
+  });
+  const { content } = await getDataUri(file);
+  const mycloud = await cloudinaryInstance.v2.uploader.upload(content, {
+    folder: "Chat App",
+  });
+  user.avatar = {
+    url: mycloud.secure_url,
+    public_id: mycloud.public_id,
+  };
+  await user.save();
   res.statusCode = 201;
-
   sendUserResponse(user, res, "Signed up seccessfully");
 });
 
@@ -154,7 +169,7 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
 });
 
 export const logoutUser = catchAsyncError(async (req, res, next) => {
-  res.clearCookie("chatIoToken", tokenCookieOptions);
+  res.clearCookie("chatIoToken");
   res.json({ success: true, message: "Logged out successfully" });
 });
 

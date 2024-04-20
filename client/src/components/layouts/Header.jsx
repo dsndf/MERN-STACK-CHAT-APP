@@ -1,5 +1,12 @@
 import styled from "@emotion/styled";
-import { AppBar, Box, IconButton, Skeleton, Toolbar } from "@mui/material";
+import {
+  AppBar,
+  Box,
+  IconButton,
+  LinearProgress,
+  Skeleton,
+  Toolbar,
+} from "@mui/material";
 import React, { useState, lazy, Suspense } from "react";
 import {
   Add,
@@ -12,6 +19,8 @@ import {
 import AppIconButton from "../shared/AppIconButton";
 import NewGroup from "../specific/NewGroup.jsx";
 import { useNavigate } from "react-router-dom";
+import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector.js";
+import { logout } from "../../redux/slices/authSlice.js";
 
 const SearchBox = lazy(() => import("../specific/FindFriends.jsx"));
 const NotificationsDialog = lazy(() => import("../specific/Notifications.jsx"));
@@ -41,7 +50,10 @@ const Header = () => {
   const [isNewGroup, setIsNewGroup] = useState(false);
   const [isNotifications, setIsNotifications] = useState(false);
   const navigate = useNavigate();
-
+  const {
+    dispatch,
+    state: { loading },
+  } = useDispatchAndSelector("auth");
   const openSearchHandler = () => {
     setIsSearch(!isSearch);
   };
@@ -62,6 +74,9 @@ const Header = () => {
     setIsNewGroup(false);
   };
   const navigateToGroups = () => navigate("/groups");
+  const logoutHandler = () => {
+    dispatch(logout());
+  };
 
   return (
     <Box>
@@ -97,10 +112,15 @@ const Header = () => {
               icon={<Notifications />}
               onClick={openNotificaitons}
             />
-            <AppIconButton title={"Groups"} icon={<People />} onClick={navigateToGroups} />
-            <AppIconButton title={"Logout"} icon={<Logout />} />
+            <AppIconButton
+              title={"Groups"}
+              icon={<People />}
+              onClick={navigateToGroups}
+            />
+            <AppIconButton title={"Logout"} icon={<Logout />}  onClick={logoutHandler} />
           </StyledIconsBox>
         </StyledToolBar>
+        {loading && <LinearProgress color="secondary" />}
       </StyledAppBar>
 
       {isSearch && (
