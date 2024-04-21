@@ -21,6 +21,7 @@ import NewGroup from "../specific/NewGroup.jsx";
 import { useNavigate } from "react-router-dom";
 import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector.js";
 import { logout } from "../../redux/slices/authSlice.js";
+import FindFreindsSkeleton from "../skeleton/FindFreindsSkeleton.jsx";
 
 const SearchBox = lazy(() => import("../specific/FindFriends.jsx"));
 const NotificationsDialog = lazy(() => import("../specific/Notifications.jsx"));
@@ -45,7 +46,7 @@ const StyledIconsBox = styled(Box)({
   alignItems: "center",
 });
 
-const Header = () => {
+const Header = ({ drawerOpenHandler }) => {
   const [isSearch, setIsSearch] = useState(false);
   const [isNewGroup, setIsNewGroup] = useState(false);
   const [isNotifications, setIsNotifications] = useState(false);
@@ -84,11 +85,31 @@ const Header = () => {
         <StyledToolBar>
           <StyledLogoBox>
             <IconButton
+              aria-label="chats-menu"
+              onClick={drawerOpenHandler}
+              sx={{
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "transparent",
+                },
+                display: {
+                  xs: "block",
+                  md: "none",
+                },
+              }}
+            >
+              <Telegram />
+            </IconButton>
+            <IconButton
               size="large"
               sx={{
                 color: "white",
                 "&:hover": {
                   backgroundColor: "transparent",
+                },
+                display: {
+                  xs: "none",
+                  md: "block",
                 },
               }}
             >
@@ -117,14 +138,18 @@ const Header = () => {
               icon={<People />}
               onClick={navigateToGroups}
             />
-            <AppIconButton title={"Logout"} icon={<Logout />}  onClick={logoutHandler} />
+            <AppIconButton
+              title={"Logout"}
+              icon={<Logout />}
+              onClick={logoutHandler}
+            />
           </StyledIconsBox>
         </StyledToolBar>
         {loading && <LinearProgress color="secondary" />}
       </StyledAppBar>
 
       {isSearch && (
-        <Suspense fallback={<p>Find Friends...</p>}>
+        <Suspense fallback={<FindFreindsSkeleton/>}>
           <SearchBox open={isSearch} closeHandler={closeSearchHandler} />
         </Suspense>
       )}

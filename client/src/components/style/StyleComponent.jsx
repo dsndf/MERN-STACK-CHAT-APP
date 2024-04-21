@@ -17,12 +17,17 @@ export const AppButton = styled(Button)(({ theme }) => ({
   m: 3,
   color: "white",
 }));
-export const StyledChatListColumn = styled(Box)({
+export const StyledChatListColumn = styled(Box)(({theme})=>({
   flex: 1,
   height: "calc(100vh - 4rem)",
   overflowY:"scroll",
-
-});
+  [theme.breakpoints.up('xs')]:{
+    display:"none"
+  },
+  [theme.breakpoints.up('md')]:{
+    display:"block"
+  },
+}))
 export const StyledChatColumn = styled(Box)({
   // backgroundColor:"skyblue",
   height: "calc(100vh - 4rem)",

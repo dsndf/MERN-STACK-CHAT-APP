@@ -23,7 +23,7 @@ const UserListItem = ({ username, avatar, handler, accept = false }) => {
     >
       <Stack direction={"row"} spacing={"1rem"} alignItems={"center"}>
         <Avatar
-          src={avatar && avatar}
+          src={avatar || ""}
           sx={{ width: "2.5rem", height: "2.5rem" }}
         />
         <ListItemText>

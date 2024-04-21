@@ -1,10 +1,10 @@
-import { List } from "@mui/material";
+import { Box, List, Skeleton } from "@mui/material";
 import React, { memo } from "react";
 import UserListItem from "../shared/UserListItem";
 
-const UserList = ({ users, handler ,selectedUsersList }) => {
+const UserList = ({ users = [], handler, selectedUsersList }) => {
   return (
-    <List disablePadding>
+    <List disablePadding sx={{mt:2}}>
       {users &&
         users.map((user) => {
           return (

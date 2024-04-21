@@ -22,7 +22,7 @@ const ChatListItem = ({
         subheader="Last message."
         titleTypographyProps={{ fontWeight: 600 }}
         avatar={
-          <Box width={80}>
+          <Box >
             <AvatarGroup max={2}>
               {avatar &&
                 avatar.map((av, i) => {
