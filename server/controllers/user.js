@@ -52,16 +52,61 @@ export const getMyProfile = catchAsyncError(async (req, res, next) => {
 });
 
 export const searchUsers = catchAsyncError(async (req, res, next) => {
+  // throw new Error("Server Errorss")
   const { keyword } = req.query;
-
+  console.log("called");
   const myFriends = req.user.friends;
-  let users = await User.find({
-    name: { $regex: keyword || "", $options: "i" },
-    _id: { $nin: myFriends },
-  }).select({ name: true, avatar: { url: true } });
+  const me = req.user._id;
+  let users = await User.aggregate([
+    {
+      $match: {
+        $and: [
+          { name: { $regex: keyword, $options: "i" } },
+          { _id: { $nin: myFriends } },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "requests", // we can use only that name which is used by mongodb like Request -> requests
+        let: { userId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ["$$userId", "$reciever"],
+                  },
+                  {
+                    $eq: [me, "$sender"],
+                  },
+                  {
+                    $eq: ["Pending", "$status"],
+                  },
+                ],
+              },
+            },
+          },
+        ],
 
+        as: "requestRecievedUsers",
+      },
+    },
+    // {
+    //   $match: {
+    //     requestRecievedUsers: [],
+    //   },
+    // },
+  ]);
+  console.log("this s", { users });
   users = users.map((user) => {
-    return { name: user.name, _id: user._id, avatar: user.avatar.url };
+    return {
+      name: user.name,
+      _id: user._id,
+      avatar: user.avatar.url,
+      sendStatus: user?.requestRecievedUsers?.length>0? true : false,
+    };
   });
 
   const message = users.length + " users found";
@@ -69,37 +114,31 @@ export const searchUsers = catchAsyncError(async (req, res, next) => {
 });
 
 export const sendFreindRequest = catchAsyncError(async (req, res, next) => {
-  const { users } = req.body;
+  const { userId } = req.body;
   const me = req.user._id;
-
-  if (!users || !users.length)
-    return next(
-      new ErrorHandler("Required at least one user to send friend request", 400)
-    );
-
+  let id = userId;
   const promises = [];
 
-  for (let id of users) {
-    const user = await User.findById(id);
-    if (!user) {
-      return next(
-        new ErrorHandler("User with userId " + id + " not found", 400)
-      );
-    }
-    const request = await Request.findOne({
-      $or: [
-        { sender: me, reciever: id },
-        { sender: id, reciever: me },
-      ],
-    });
-    if (request) {
-      return next(new ErrorHandler(`Request had already been sent.`, 409));
-    }
-    promises.push(Request.create({ sender: me, reciever: id }));
+  const user = await User.findById(id);
+  if (!user) {
+    return next(new ErrorHandler("User with userId " + id + " not found", 400));
   }
+  const request = await Request.findOne({
+    $or: [
+      { sender: me, reciever: id },
+      { sender: id, reciever: me },
+    ],
+  });
+  if (request) {
+    return next(new ErrorHandler(`Request had already been sent.`, 409));
+  }
+  promises.push(Request.create({ sender: me, reciever: id }));
+
   const requests = await Promise.all(promises);
-  emitEvent(req, NOTIFICATION, { users }, "Notification recieved");
-  res.status(201).json({ suucess: true, requests });
+  emitEvent(req, NOTIFICATION, { users: [userId] }, "Notification recieved");
+  res
+    .status(201)
+    .json({ suucess: true, requests, message: "Request Sent to" + user.name });
 });
 
 export const getMyNotifications = catchAsyncError(async (req, res, next) => {

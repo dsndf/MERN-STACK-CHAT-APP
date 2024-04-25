@@ -1,4 +1,4 @@
-import { body,buildCheckFunction ,check} from "express-validator";
+import { body, buildCheckFunction, check, cookie } from "express-validator";
 
 export const signupValidator = () => {
   return [
@@ -16,20 +16,19 @@ export const loginValidator = () => {
   ];
 };
 
-export const sendFriendRequestValidator = ()=>{
-  return body('users',"Please provide users array").notEmpty().isArray({min:1}).withMessage("Please provide at least 1 user to send friend request.")
-}
-export const replyFriendRequestValidator = ()=>{
-  return body('reply',"Please provide reply to the request").notEmpty();
-}
+export const sendFriendRequestValidator = () => {
+  return body("userId").isMongoId().withMessage("Please provide valid userId");
+};
+export const replyFriendRequestValidator = () => {
+  return body("reply", "Please provide reply to the request").notEmpty();
+};
 
-
-export const validateAdminLogin = ()=>{
-  return body('passkey','Admin pass key is required').notEmpty();
-}
-export const checkAdminAuthorization = (field)=>{
- return (value , {req})=>{
-  console.log(req.body[field]);
-  return true;
- }
-} 
+export const validateAdminLogin = () => {
+  return body("passkey", "Admin pass key is required").notEmpty();
+};
+export const checkAdminAuthorization = (field) => {
+  return (value, { req }) => {
+    console.log(req.body[field]);
+    return true;
+  };
+};

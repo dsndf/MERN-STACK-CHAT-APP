@@ -12,21 +12,28 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import UserList from "./UserList";
 import { users } from "../../constants/sampleData";
-import { useLazySearchUserQuery } from "../../redux/api/query";
+import { toast } from "react-hot-toast";
+import {
+  useLazySearchUserQuery,
+  useSendFriendRequestMutation,
+} from "../../redux/api/query";
 import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector";
 import {
   setSearchedUsers,
   setUserNotificationLoading,
 } from "../../redux/slices/userNotificationSlice";
-
+import { useResponseSuccessError } from "../../hooks/useResponseSuccessError";
 
 const FindFriends = ({ open, closeHandler }) => {
   const searchFriend = useInputValidation("");
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchUser, results] = useLazySearchUserQuery();
+  const [sendFriendRequest, sendFriendRequestResponse] =
+    useSendFriendRequestMutation();
+  useResponseSuccessError(sendFriendRequestResponse);
+
   const {
     dispatch,
     state: { loading, searchedUsers },
@@ -35,7 +42,7 @@ const FindFriends = ({ open, closeHandler }) => {
     dispatch(setUserNotificationLoading(true));
     const tid = setTimeout(() => {
       searchUser(searchFriend.value);
-    },1500);
+    }, 1500);
     return () => clearTimeout(tid);
   }, [searchFriend.value]);
 
@@ -45,8 +52,7 @@ const FindFriends = ({ open, closeHandler }) => {
       dispatch(setSearchedUsers(results.data.users));
     }
   }, [results]);
-
-  const sendFriendRequestHandler = (id) => {};
+    console.log(sendFriendRequest);
   return (
     <Dialog open={open}>
       <Stack p={"1rem"} width={"420px"}>
@@ -66,14 +72,19 @@ const FindFriends = ({ open, closeHandler }) => {
             ),
           }}
         />
-      {
-        results.isFetching &&<Box mt={2} textAlign={'center'}><CircularProgress  size={20} /></Box>
-      }
-        <UserList
-          users={searchedUsers}
-          selectedUsersList={selectedUsers}
-          handler={sendFriendRequestHandler}
-        />
+        {results.isFetching && (
+          <Box mt={2} textAlign={"center"}>
+            <CircularProgress size={20} />
+          </Box>
+        )}
+        <Box>
+          <UserList
+            users={searchedUsers}
+            handler={sendFriendRequest}
+            isFriendRequest={true}
+          />
+        </Box>
+
         <DialogActions>
           <Button onClick={closeHandler}>Close</Button>
         </DialogActions>

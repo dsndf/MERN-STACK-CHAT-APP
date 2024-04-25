@@ -4,7 +4,7 @@ import { headerBg, mainBg, onlineColor, selected } from "../../constants/color";
 import { Handshake } from "@mui/icons-material";
 
 const ChatListItem = ({
-  avatar = [1, 2, 4, 5, 6],
+  avatar,
   name,
   _id,
   groupChat = false,
@@ -22,16 +22,11 @@ const ChatListItem = ({
         subheader="Last message."
         titleTypographyProps={{ fontWeight: 600 }}
         avatar={
-          <Box >
+          <Box>
             <AvatarGroup max={2}>
               {avatar &&
                 avatar.map((av, i) => {
-                  return (
-                    <Avatar
-                      key={av?.public_id}
-                      src={av?. url}
-                    />
-                  );
+                  return <Avatar key={av?.public_id} src={av?.url} />;
                 })}
             </AvatarGroup>
           </Box>

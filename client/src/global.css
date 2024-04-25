@@ -72,4 +72,7 @@
   a{
     text-decoration: none;
   }
-  
+  * {
+    scrollbar-width: thin;          /* "auto" or "thin" */
+    scrollbar-color: rgb(56, 56, 56) rgb(209, 209, 209);   /* scroll thumb and track */ 
+  }
