@@ -14,9 +14,6 @@ export const authentication = catchAsyncError(async (req, res, next) => {
       new ErrorHandler("Invalid Token or Token has been expired.", 401)
     );
   req.user = await User.findById(decodeToken._id);
-  if (!req.user)
-    return next(
-      new ErrorHandler("Invalid Token or  Token has been expired.", 401)
-    );
+  if (!req.user) return next(new ErrorHandler("Invalid Token", 401));
   next();
 });

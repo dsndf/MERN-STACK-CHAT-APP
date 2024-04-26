@@ -49,3 +49,4 @@ userRouter
 userRouter.route("/logout").get(logoutUser);
 
 userRouter.route("/friends").get(getMyFriends);
+

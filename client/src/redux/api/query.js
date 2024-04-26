@@ -3,7 +3,7 @@ import { server } from "../../config/settings";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: server }),
-  tagTypes: ["Chats", "User"],
+  tagTypes: ["Chats", "User", "Friends"],
   endpoints: (builder) => ({
     getMyChats: builder.query({
       query: () => ({ url: "/chat/my/chats", credentials: "include" }),
@@ -20,10 +20,25 @@ export const api = createApi({
       query: (data) => ({
         url: "user/send/friend/request",
         method: "POST",
-        body: { userId:data },
+        body: { userId: data },
         credentials: "include",
       }),
       invalidatesTags: ["User"],
+    }),
+    getFriends: builder.query({
+      query: ({ chatId, keyword }) => ({
+        url: `/user/friends?keyword=${keyword}&chatId=${chatId}`,
+        credentials: "include",
+      }),
+      providesTags: ["Friends"],
+    }),
+    createNewGroup: builder.mutation({
+      query: (data) => ({
+        url: "/chat/new/group",
+        method: "POST",
+        body: data,
+        credentials: "include",
+      }),
     }),
   }),
 });
@@ -32,4 +47,6 @@ export const {
   useGetMyChatsQuery,
   useLazySearchUserQuery,
   useSendFriendRequestMutation,
+  useLazyGetFriendsQuery,
+  useCreateNewGroupMutation
 } = api;

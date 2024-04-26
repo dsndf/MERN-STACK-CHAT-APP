@@ -11,9 +11,19 @@ import React, { useEffect, useState } from "react";
 import UserList from "./UserList";
 import { users } from "../../constants/sampleData";
 import { Search } from "@mui/icons-material";
- 
+import {
+  useCreateNewGroupMutation,
+  useLazyGetFriendsQuery,
+} from "../../redux/api/query";
+import { useResponseSuccessError } from "../../hooks/useResponseSuccessError";
+import { useInputValidation } from "6pp";
+
 const NewGroup = ({ open, closeHandler }) => {
+  const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
+  const [createNewGroup, createNewGroupResponse] = useCreateNewGroupMutation();
+  useResponseSuccessError(getFriendsResponse, createNewGroupResponse);
   const [selectedMembers, setSeletedMembers] = useState([]);
+  const searchPeople = useInputValidation("");
   const selectGroupMemberHandler = (id) => {
     setSeletedMembers((prev) => {
       if (prev.includes(id)) {
@@ -21,15 +31,23 @@ const NewGroup = ({ open, closeHandler }) => {
       } else return [...prev, id];
     });
   };
+  const doneButtonClickHandler = () => {
+    createNewGroup({ members: selectedMembers, name: "Team Hanuman" });
+    if(selectedMembers.length>=3) setSeletedMembers([]);
+  };
   useEffect(() => {
     console.log(selectedMembers);
   }, [selectedMembers]);
-
+  useEffect(() => {
+    getFriends({ keyword: searchPeople.value });
+  }, [searchPeople.value]);
   return (
-    <Dialog open={open}>
-      <Stack p={ "1rem"} >
+    <Dialog open={open} onClose={closeHandler}>
+      <Stack p={"1rem"} width={350}>
         <DialogTitle textAlign={"center"}>New Group</DialogTitle>
         <TextField
+          value={searchPeople.value}
+          onChange={searchPeople.changeHandler}
           placeholder="Search people here."
           size="small"
           InputProps={{
@@ -42,7 +60,7 @@ const NewGroup = ({ open, closeHandler }) => {
         />
         <Stack>
           <UserList
-            users={users}
+            users={getFriendsResponse?.data?.friends}
             handler={selectGroupMemberHandler}
             selectedUsersList={selectedMembers}
           />
@@ -51,7 +69,11 @@ const NewGroup = ({ open, closeHandler }) => {
           <Button variant="text" color="error" onClick={closeHandler}>
             Cancel
           </Button>
-          <Button variant="contained" color="primary">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={doneButtonClickHandler}
+          >
             Done
           </Button>
         </DialogActions>

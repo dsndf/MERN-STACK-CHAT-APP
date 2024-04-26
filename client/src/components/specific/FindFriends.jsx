@@ -55,7 +55,7 @@ const FindFriends = ({ open, closeHandler }) => {
     console.log(sendFriendRequest);
   return (
     <Dialog open={open}>
-      <Stack p={"1rem"} width={"420px"}>
+      <Stack p={"1rem"} width={350}>
         <DialogTitle textAlign={"center"}>Find Friends</DialogTitle>
         <TextField
           variant="outlined"

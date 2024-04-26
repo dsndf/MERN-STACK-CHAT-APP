@@ -5,7 +5,7 @@ export const onlineColor = '#6bd306';
 export const textColorInDark = 'white'
 export const textColor = 'black'
 export const profileContentColor = '#bbbbbb'
-export const removeColor = 'red';
+export const removeColor = '#ff0047';
 export const inputGray = '#f1f1f1';
 export const hoverMainBg = '#720082';
 // export const 

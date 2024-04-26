@@ -23,11 +23,14 @@ const UserListItem = ({
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        gap: "10rem",
+        width: "100%",
       }}
     >
       <Stack direction={"row"} spacing={"1rem"} alignItems={"center"}>
-        <Avatar src={avatar || ""} sx={{ width: "2.5rem", height: "2.5rem" }} />
+        <Avatar
+          src={avatar?.url || ""}
+          sx={{ width: "2.5rem", height: "2.5rem" }}
+        />
         <ListItemText>
           <Typography variant="p" color="initial">
             {username}
@@ -35,11 +38,11 @@ const UserListItem = ({
         </ListItemText>
       </Stack>
       <StyledAddFriendButton
-        disabled={accept}
+        disabled={isFriendRequest && accept}
         sx={{
           bgcolor: accept && removeColor,
-          "&:hover": { bgcolor: accept ? removeColor : mainBg },
         }}
+       disableRipple
         onClick={onButtonClick}
         size="small"
       >

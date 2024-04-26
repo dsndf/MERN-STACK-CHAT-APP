@@ -1,7 +1,13 @@
 import { body, check, param, query } from "express-validator";
 
 export const createGroupValidator = () => {
-  return [body("members", "Please provide members").notEmpty()];
+  return [
+    body("members", "Please provide members")
+      .notEmpty()
+      .isArray({ min: 3 })
+      .withMessage("Please provide at least 3 members"),
+    body("name").notEmpty().withMessage("Please provide group name"),
+  ];
 };
 
 export const addMembersValidator = () => {

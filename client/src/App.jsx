@@ -50,7 +50,7 @@ const App = () => {
       dispatch(setAuthErr(""));
     } else if (message) {
       toast.success(message);
-      setAuthMessage("");
+      dispatch(setAuthMessage(""));
     }
   }, [err, message]);
   return (

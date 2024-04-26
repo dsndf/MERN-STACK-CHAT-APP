@@ -7,12 +7,14 @@ export const useResponseSuccessError = (...responses) => {
     let errorResponses = responses.filter((response) => response.isError);
     if (successResponses.length) {
       for (let response of successResponses) {
-        toast.success(response?.data?.message);
+        let toastSuccessMessage = response?.data?.message;
+        if (toastSuccessMessage) toast.success(toastSuccessMessage);
       }
     }
     if (errorResponses.length) {
       for (let response of errorResponses) {
-        toast.error(response?.error?.data?.message);
+        let toastErrorMessage = response?.error?.data?.message;
+        if (toastErrorMessage) toast.error(toastErrorMessage);
       }
     }
   }, [...responses]);

@@ -24,9 +24,9 @@ const AddMember = ({ open, openHanlder, closeHandler, saveChangesAction }) => {
 
   return (
     <Dialog open={open} onClose={closeHandler}>
-      <Box p  >
+      <Box p>
         <DialogTitle>Add Member</DialogTitle>
-        <DialogContent >
+        <DialogContent>
           <DialogContentText>
             Let's have a new memebers into the group.
           </DialogContentText>

@@ -9,17 +9,11 @@ import { createAttachments } from "../seeders/messages.js";
 import { ErrorHandler } from "../utils/errorHandler.js";
 
 export const createNewGroup = catchAsyncError(async (req, res, next) => {
-  let { name, members, isGroup } = req.body;
+  let { name, members } = req.body;
   members = [...members, req.user._id];
-  if (!isGroup)
-    return next(new ErrorHandler("Request denied to create group.", 400));
-  if (!name) return next(new ErrorHandler("Group name is missing.", 400));
-  if (members.length < 3)
-    return next(new ErrorHandler("Group must have at least 3 members.", 422));
-
   const newGroup = await Chat.create({
     name,
-    isGroup,
+    isGroup: true,
     members,
     creator: req.user._id,
   });
@@ -164,7 +158,7 @@ export const leaveGroup = catchAsyncError(async (req, res, next) => {
   if (!group) return next(new ErrorHandler("Group not found", 404));
 
   const remainingMembers = getOtherMembers(group.members, req.user._id);
-  console.log({remainingMembers})
+  console.log({ remainingMembers });
   if (remainingMembers.length < 3)
     return next(new ErrorHandler("Group must have at least 3 members.", 422));
 

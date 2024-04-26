@@ -105,7 +105,7 @@ export const searchUsers = catchAsyncError(async (req, res, next) => {
       name: user.name,
       _id: user._id,
       avatar: user.avatar.url,
-      sendStatus: user?.requestRecievedUsers?.length>0? true : false,
+      sendStatus: user?.requestRecievedUsers?.length > 0 ? true : false,
     };
   });
 
@@ -214,7 +214,7 @@ export const logoutUser = catchAsyncError(async (req, res, next) => {
 
 export const getMyFriends = catchAsyncError(async (req, res, next) => {
   const me = req.user._id;
-  const { chat_id } = req.query;
+  const { chat_id, keyword } = req.query;
   let friends = [];
   if (chat_id) {
     const chat = await Chat.findById(chat_id).populate(
@@ -224,11 +224,16 @@ export const getMyFriends = catchAsyncError(async (req, res, next) => {
     if (!chat) return next(new ErrorHandler("Chat not found", 404));
     friends = getOtherMembers(chat.members, me);
   }
-  friends = await User.findById({ _id: me })
+  const myFriends = await User.findById({ _id: me })
     .populate("friends", "name avatar")
-    .select("friends");
+    .select("friends -_id");
+  const filteredFriends = myFriends.friends.filter((friend) => {
+    let regex = new RegExp(keyword, "gi");
+    return regex.test(friend.name);
+  });
+
   res.json({
     success: true,
-    friends,
+    friends: filteredFriends,
   });
 });
