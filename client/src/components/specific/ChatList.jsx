@@ -10,7 +10,7 @@ const ChatList = ({ chats, activeChatId }) => {
       {chats &&
         chats.map((chat, i) => {
           return (
-            <Link to={`/chat/${chat._id}`} key={chat?._id}>
+            <Link to={`/chat/${chat._id}?populate=true`} key={chat?._id}>
               <ChatListItem
                 key={chat?._id}
                 _id={chat?._id}

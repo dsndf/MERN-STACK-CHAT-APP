@@ -67,3 +67,4 @@ chatRouter
 chatRouter
   .route("/messages/:chat_id")
   .get(chatIdValidator(), validateHandler, getMessages);
+

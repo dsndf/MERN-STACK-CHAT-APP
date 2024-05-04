@@ -33,11 +33,13 @@ const NewGroup = ({ open, closeHandler }) => {
   };
   const doneButtonClickHandler = () => {
     createNewGroup({ members: selectedMembers, name: "Team Hanuman" });
-    if(selectedMembers.length>=3) setSeletedMembers([]);
   };
   useEffect(() => {
     console.log(selectedMembers);
-  }, [selectedMembers]);
+    if (createNewGroupResponse.isSuccess) {
+      setSeletedMembers([]);
+    }
+  }, [selectedMembers, createNewGroupResponse.isSuccess]);
   useEffect(() => {
     getFriends({ keyword: searchPeople.value });
   }, [searchPeople.value]);
@@ -73,6 +75,7 @@ const NewGroup = ({ open, closeHandler }) => {
             variant="contained"
             color="primary"
             onClick={doneButtonClickHandler}
+            disabled={createNewGroupResponse.isLoading}
           >
             Done
           </Button>

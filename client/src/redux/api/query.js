@@ -3,7 +3,7 @@ import { server } from "../../config/settings";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: server }),
-  tagTypes: ["Chats", "User", "Friends"],
+  tagTypes: ["Chats", "User", "Friends", "Chat_Details", "Messages"],
   endpoints: (builder) => ({
     getMyChats: builder.query({
       query: () => ({ url: "/chat/my/chats", credentials: "include" }),
@@ -40,6 +40,23 @@ export const api = createApi({
         credentials: "include",
       }),
     }),
+    getNotifications: builder.query({
+      query: () => ({ url: "/user/notifications", credentials: "include" }),
+    }),
+    getChatDetails: builder.query({
+      query: ({ chatId, populate }) => ({
+        url: `${server}/chat/${chatId}?populate=${populate}`,
+        credentials: "include",
+      }),
+      providesTags: ["Chat_Details"],
+    }),
+    getChatMessages: builder.query({
+      query: ({ chatId }) => ({
+        url: server + "/chat/messages/" + chatId,
+        credentials: "include",
+      }),
+      providesTags: ["Messages"],
+    }),
   }),
 });
 
@@ -48,5 +65,8 @@ export const {
   useLazySearchUserQuery,
   useSendFriendRequestMutation,
   useLazyGetFriendsQuery,
-  useCreateNewGroupMutation
+  useCreateNewGroupMutation,
+  useLazyGetNotificationsQuery,
+  useGetChatDetailsQuery,
+  useGetChatMessagesQuery
 } = api;

@@ -24,17 +24,17 @@ import { mainBg } from "../../constants/color";
 import { getLast7days } from "../../lib/features";
 
 const doughnutChartOptions = {
-    responsive:true,
-    plugins:{
-        legend:{
-            display:false,
-        } ,
-        title:{
-            display:false
-        }
+  responsive: true,
+  plugins: {
+    legend: {
+      display: false,
     },
-    cutout:80
-}
+    title: {
+      display: false,
+    },
+  },
+  cutout: 80,
+};
 const lineChartOptions = {
   responsive: true,
   plugins: {
@@ -64,7 +64,7 @@ export const LineChart = () => {
     labels: getLast7days(),
     datasets: [
       {
-        data: [2, 13, 4, 9, 15, 0,20],
+        data: [2, 13, 4, 9, 15, 0, 20],
         fill: true,
         label: "Revenue",
         backgroundColor: "#d2a3d9",
@@ -80,12 +80,18 @@ export const DougnutChart = ({ value = [22, 12] }) => {
     datasets: [
       {
         data: value,
-    
-        backgroundColor:["#ff9ec3",'#9ab9fc'],
-        borderColor:['#de0055','blue'],
-        offset:40
+
+        backgroundColor: ["#ff9ec3", "#9ab9fc"],
+        borderColor: ["#de0055", "blue"],
+        offset: 40,
       },
     ],
   };
-  return <Doughnut style={{zIndex:10}} data={data} options={doughnutChartOptions} />;
+  return (
+    <Doughnut
+      style={{ zIndex: 10 }}
+      data={data}
+      options={doughnutChartOptions}
+    />
+  );
 };

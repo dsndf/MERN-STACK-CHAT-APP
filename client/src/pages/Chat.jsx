@@ -1,4 +1,4 @@
-import React, { Fragment, useRef } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import {
   StyledChatColumn,
   StyledChatForm,
@@ -14,12 +14,68 @@ import AttachFileMenu from "../components/dialog/AttachFileMenu.jsx";
 import { useDialog } from "../hooks/useDialog.js";
 import MessageComponent from "../components/shared/MessageComponent.jsx";
 import { sampleMessages } from "../constants/sampleData.js";
-import { fileFormat } from "../lib/features.js";
+import { fileFormat, getMessageSenderData } from "../lib/features.js";
 import RenderAttachment from "../components/shared/RenderAttachment.jsx";
+import {
+  useGetChatDetailsQuery,
+  useGetChatMessagesQuery,
+} from "../redux/api/query.js";
+import { useResponseSuccessError } from "../hooks/useResponseSuccessError.js";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useInputValidation } from "6pp";
+import { useDispatchAndSelector } from "../hooks/useDispatchAndSelector.js";
+import { useAddEvents } from "../hooks/useAddEvents.js";
+import { getSocket } from "../context/SocketApiContext.jsx";
 
-const Chat = ({ chatId }) => {
-  const attachFileDialogAnchorEleRef = useRef(null);
-  const attachFileDialog = useDialog({});
+const Chat = () => {
+  const { id: chatId } = useParams();
+  const populate = useSearchParams()[0].get("populate");
+  const attachFileDialogAnchorEleRef = useRef();
+  const messageToSend = useInputValidation("");
+  const socket = getSocket();
+  const {
+    state: { user },
+  } = useDispatchAndSelector("auth");
+  const attachFileDialog = useDialog({ value: true });
+  const [oldMessages, setOldMessages] = useState([]);
+  const chatDetails = useGetChatDetailsQuery({ chatId, populate });
+  const oldMessagesChunks = useGetChatMessagesQuery({ chatId });
+  const oldMessagesChunksData = oldMessagesChunks.data;
+  const chatDetailsData = chatDetails.data;
+  useResponseSuccessError(chatDetails, oldMessagesChunks);
+  console.log({
+    CHAT_DETAILS: chatDetailsData?.chat,
+    messages: oldMessagesChunksData?.messages,
+  });
+  const MessageAlert = {
+    event: "message-alert",
+    eventHandler: (message) => {
+      setOldMessages((prev) => [...prev, message]);
+    },
+  };
+
+  const sendMessageHanlder = () => {
+    const messageForRealTime = {
+      sender: user?._id,
+      createdAt: new Date(),
+      content: messageToSend.value,
+      attachments: [],
+    };
+    console.log({ messageForRealTime });
+
+    setOldMessages((prev) => [...prev, messageForRealTime]);
+  };
+
+  useEffect(() => {
+    if (oldMessagesChunksData?.messages)
+      setOldMessages((prev) => [...oldMessagesChunksData.messages, ...prev]);
+  }, [oldMessagesChunksData]);
+
+  useEffect(() => {
+    setOldMessages([]);
+  }, [chatId]);
+
+  useAddEvents(MessageAlert);
 
   return (
     <>
@@ -37,13 +93,15 @@ const Chat = ({ chatId }) => {
             top={"0px"}
             width={"100%"}
             spacing={"0.5rem"}
+            height={"calc(100% - 4rem)"}
+            sx={{ overflowY: "scroll" }}
           >
-            {sampleMessages &&
-              sampleMessages.map(
-                ({ sender, attachments, content, createdAt }) => {
-                  console.log({attachments})
+            {oldMessages &&
+              oldMessages.map(
+                ({ sender, attachments, content, createdAt, _id }) => {
+                  console.log({ attachments });
                   return (
-                    <Fragment>
+                    <Fragment key={_id}>
                       {attachments.length > 0 &&
                         attachments.map(({ url, public_id }) => {
                           const file = fileFormat(url);
@@ -62,7 +120,10 @@ const Chat = ({ chatId }) => {
                         })}
                       {content && (
                         <MessageComponent
-                          sender={sender}
+                          sender={getMessageSenderData(
+                            chatDetailsData?.chat?.members,
+                            sender
+                          )}
                           content={content}
                           createdAt={createdAt}
                         />
@@ -93,8 +154,13 @@ const Chat = ({ chatId }) => {
               >
                 <AttachFile color="gray" />
               </IconButton>
-              <StyledChatFormInputBox placeholder="Type message" />
+              <StyledChatFormInputBox
+                placeholder="Type message"
+                value={messageToSend.value}
+                onChange={messageToSend.changeHandler}
+              />
               <IconButton
+                onClick={sendMessageHanlder}
                 sx={{
                   bgcolor: mainBg,
                   "&:hover": { bgcolor: hoverMainBg },

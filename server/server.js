@@ -14,6 +14,8 @@ import { listenSocketEvent, emitSocketEvent } from "./lib/helper.js";
 import { faker } from "@faker-js/faker";
 import cors from "cors";
 import cloudinary from "cloudinary";
+import { socketAuthentication } from "./middlewares/socketAuthentication.js";
+import { createMessages } from "./seeders/messages.js";
 
 // ............SEEDERS...........
 // import { createUsers } from "./seeders/users.js";
@@ -26,6 +28,14 @@ process.on("uncaughtException", (err) => {
 });
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173"],
+    methods: ["GET"],
+    credentials: true,
+  },
+});
 dotenv.config({ path: "./.env" });
 cloudinary.v2.config({
   api_key: 335345271554731,
@@ -33,10 +43,10 @@ cloudinary.v2.config({
   cloud_name: "dt9cg0trl",
 });
 connectDB(process.env.MONGODB_URI);
+// createMessages(20);
 
-// createUsers(10);
-// createMessages(15);
 const port = process.env.PORT || 4000;
+
 app.use(
   cors({
     origin: [
@@ -51,32 +61,34 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/", async (req, res, next) => {
-  res.json({ success: true });
-  
+app.use((req, res, next) => {
+  req.io = io;
+  next();
 });
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/admin", adminRouter);
-const server = createServer(app);
-const io = new Server(server);
+
 server.listen(port, () => {
   console.log("node environment is 🌲" + process.env.NODE_ENV);
   console.log("✌ Listening at ", port);
 });
 // Mapping between user id and socket id .............
-const usersSocket = new Map();
+export const usersSocket = new Map();
 
-// ESTABLISHING IO CONNECTION
-io.use((socket, next) => {});
+io.use((socket, next) => {
+  cookieParser()(socket.request, null, async (err) => {
+    await socketAuthentication(err, socket, next);
+  });
+});
+
 io.on("connection", (socket) => {
-  console.log("Socket client user " + socket.id + " connected");
-  const user = {
-    _id: faker.internet.userName({}).slice(0, 3),
-    name: "Gaurav jain",
-  };
-  console.log(user);
-  usersSocket.set(user._id, socket.id);
+  console.log({ socket: socket.id });
+  const user = socket.request.user;
+  if (user) {
+    usersSocket.set(String(user._id), socket.id);
+  }
+  console.log(usersSocket);
   listenSocketEvent(
     socket,
     "MESSAGE",

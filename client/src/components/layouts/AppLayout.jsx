@@ -11,9 +11,11 @@ import ChatList from "../specific/ChatList";
 import { useParams } from "react-router-dom";
 import { useGetMyChatsQuery } from "../../redux/api/query";
 import { useDialog } from "../../hooks/useDialog";
+import { getSocket } from "../../context/SocketApiContext";
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
+    console.log(getSocket());
     const { id } = useParams();
     const { data, error, refetch, isLoading } = useGetMyChatsQuery();
     console.log(data);
@@ -29,7 +31,7 @@ const AppLayout = () => (WrappedComponent) => {
             <ChatList activeChatId={id} chats={data?.chats} />
           </StyledChatListColumn>
           <WrappedComponent {...props} />
-          <StyledProfileColumn>
+          <StyledProfileColumn display={["none", "none", "block"]}>
             <Profile />
           </StyledProfileColumn>
         </Stack>

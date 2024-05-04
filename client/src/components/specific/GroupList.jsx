@@ -3,11 +3,12 @@ import React from "react";
 import GroupListItem from "../shared/GroupListItem";
 
 const GroupList = ({
-  groupList = [{ _id: "nasda" }, { _id: "Dsadnbsa" }
-  , { _id: "Dsadnbsas" }
-  , { _id: "Dsadnbssa" }
-
-],
+  groupList = [
+    { _id: "nasda" },
+    { _id: "Dsadnbsa" },
+    { _id: "Dsadnbsas" },
+    { _id: "Dsadnbssa" },
+  ],
   chatId,
 }) => {
   return (

@@ -2,7 +2,7 @@ import { Chat } from "../models/chat.js";
 import { User } from "../models/user.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { emitEvent } from "../events/emitEvent.js";
-import { ALERT, MESSAGE_SENT, REFECTH_CHATS } from "../events/eventTypes.js";
+import { ALERT, MESSAGE_ALERT, MESSAGE_SENT, REFECTH_CHATS } from "../events/eventTypes.js";
 import { getFileUrls, getOtherMembers } from "../lib/helper.js";
 import { Message } from "../models/message.js";
 import { createAttachments } from "../seeders/messages.js";
@@ -39,13 +39,11 @@ export const getMyChats = catchAsyncError(async (req, res, next) => {
       (acc, member) => [...acc, member.avatar],
       []
     );
-    console.log({ members: chat.members });
     let singleReciever =
       !chat.isGroup &&
       chat.members.find((member) => {
         if (String(member._id) !== String(me)) return member;
       });
-    console.log({ singleReciever });
     return {
       isGroup: chat.isGroup,
       name: singleReciever ? singleReciever.name : chat.name,
@@ -53,7 +51,9 @@ export const getMyChats = catchAsyncError(async (req, res, next) => {
       _id: chat._id,
     };
   });
-
+  // req.io
+  //   .to(usersSocket[String(req.user._id)])
+  //   .emit("Wish", "Welcome to ChatIO");
   res.json({ success: true, chats });
 });
 
@@ -205,30 +205,35 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
 
   const { chat_id } = req.params;
 
-  const chat = await Chat.findById(chat_id);
+  const chat = await Chat.findById(chat_id).populate("members", "name");
   if (!chat) return next(new ErrorHandler("Chat not found", 404));
 
   const attachments = createAttachments(5);
   const chatName = chat.isGroup
     ? chat.name
-    : getOtherMembers(chat.members, req.user._id)[0];
+    : getOtherMembers(chat.members, req.user._id)[0].name;
 
   const messageOFAttachmentsForRealTime = {
     sender: { name: req.user.name, _id: req.user._id },
-    attachments: getFileUrls(attachments),
-    chat: chat_id,
+    attachments,
+    chat: chat._id,
     content,
-    createdAt: new Date(),
+    createdAt: new Date()
   };
-  emitEvent(req, MESSAGE_SENT, `Message sent to ${chatName}`, {
-    users: chat.members,
-    message: messageOFAttachmentsForRealTime,
-  });
+  emitEvent(
+    req,
+    MESSAGE_ALERT,
+    {
+      users: chat.members,
+      message: messageOFAttachmentsForRealTime,
+    },
+    `Message sent to ${chatName}`
+  );
 
   const messageOFAttachmentsForDB = await Message.create({
     sender: req.user._id,
     attachments,
-    chat: chat_id,
+    chat: chat._id,
     content,
   });
   res.status(201).json({
@@ -303,7 +308,7 @@ export const getMessages = catchAsyncError(async (req, res, next) => {
   const me = req.user._id;
 
   const chat = await Chat.findById(chat_id);
-  if (!chat.members.includes(me)) {
+  if (!chat.members.includes(String(me))) {
     return next(new ErrorHandler("You don't have access to this chat", 403));
   }
 

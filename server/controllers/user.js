@@ -149,18 +149,16 @@ export const getMyNotifications = catchAsyncError(async (req, res, next) => {
       { reciever: me },
       { $or: [{ status: "Pending" }, { status: "Accepted" }] },
     ],
-  });
+  }).populate("sender","name avatar");
   const newNotifications = notifications.filter(
     (notification) => notification.status === "Pending"
   );
   const otherNotifications = notifications.filter(
     (notification) => notification.status !== "Pending"
   );
-  const noOfNewNotifications = newNotifications.length;
 
   res.json({
     success: true,
-    noOfNewNotifications,
     newNotifications,
     otherNotifications,
   });

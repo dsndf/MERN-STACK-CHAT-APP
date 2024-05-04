@@ -28,7 +28,7 @@ import {
 import { useResponseSuccessError } from "../../hooks/useResponseSuccessError";
 
 const FindFriends = ({ open, closeHandler }) => {
-  const searchFriend = useInputValidation("");
+  const search = useInputValidation("");
   const [searchUser, results] = useLazySearchUserQuery();
   const [sendFriendRequest, sendFriendRequestResponse] =
     useSendFriendRequestMutation();
@@ -36,15 +36,16 @@ const FindFriends = ({ open, closeHandler }) => {
 
   const {
     dispatch,
-    state: { loading, searchedUsers },
+    state: { searchedUsers },
   } = useDispatchAndSelector("userNotification");
+
   useEffect(() => {
     dispatch(setUserNotificationLoading(true));
     const tid = setTimeout(() => {
-      searchUser(searchFriend.value);
+      searchUser(search.value);
     }, 1500);
     return () => clearTimeout(tid);
-  }, [searchFriend.value]);
+  }, [search.value]);
 
   useEffect(() => {
     if (results.isSuccess) {
@@ -52,7 +53,7 @@ const FindFriends = ({ open, closeHandler }) => {
       dispatch(setSearchedUsers(results.data.users));
     }
   }, [results]);
-    console.log(sendFriendRequest);
+  console.log(sendFriendRequest);
   return (
     <Dialog open={open}>
       <Stack p={"1rem"} width={350}>
@@ -61,8 +62,8 @@ const FindFriends = ({ open, closeHandler }) => {
           variant="outlined"
           type="text"
           size="small"
-          value={searchFriend.value}
-          onChange={searchFriend.changeHandler}
+          value={search.value}
+          onChange={search.changeHandler}
           placeholder="Search new friends here"
           InputProps={{
             startAdornment: (
