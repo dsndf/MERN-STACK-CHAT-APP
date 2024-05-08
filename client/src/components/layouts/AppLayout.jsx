@@ -12,14 +12,30 @@ import { useParams } from "react-router-dom";
 import { useGetMyChatsQuery } from "../../redux/api/query";
 import { useDialog } from "../../hooks/useDialog";
 import { getSocket } from "../../context/SocketApiContext";
+import { useAddEvents } from "../../hooks/useAddEvents";
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
-    console.log(getSocket());
     const { id } = useParams();
     const { data, error, refetch, isLoading } = useGetMyChatsQuery();
-    console.log(data);
     const { open, closeHandler, openHandler } = useDialog({ value: false });
+
+    useAddEvents(
+      {
+        event: "I am online",
+        eventHandler: (message) => {
+          refetch();
+        },
+      },
+      {
+        event: "I am offline",
+        eventHandler: (message) => {
+        console.log("i am off")
+          refetch();
+        },
+      }
+    );
+
     return (
       <>
         <Header drawerOpenHandler={openHandler} />

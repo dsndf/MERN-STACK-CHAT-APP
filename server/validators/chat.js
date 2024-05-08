@@ -33,13 +33,15 @@ export const removeMemberValidator = () => {
   ];
 };
 
+export const sendMessageValidator = () => {
+  return [
+    chatIdValidator(),
+    body("content", "Please provide content").notEmpty(),
+  ];
+};
 export const sendAttachmentsValidator = () => {
   return [
-    param("chat_id", "Please provide valid chat id").isMongoId(),
-    check("files", "Please provide files")
-      .optional()
-      .isArray({ max: 5 })
-      .withMessage("You can send only upto 5 files at a time"),
+    chatIdValidator(),
   ];
 };
 

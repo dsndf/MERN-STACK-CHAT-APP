@@ -1,7 +1,12 @@
-import cloudinary from  'cloudinary';
-import dataUriparser from  'datauri/parser.js';
-export const getOtherMembers = (members, me) => {
-  return members.filter((member) => String(member) !== String(me));
+import cloudinary from "cloudinary";
+import dataUriparser from "datauri/parser.js";
+import { usersSocket } from "../server.js";
+export const getOtherMembers = (members, me, isPopulated = false) => {
+  return members.filter((member) => {
+    if (isPopulated) {
+      return String(member._id) !== String(me);
+    } else return String(member) !== String(me);
+  });
 };
 
 export const getFileUrls = (fileListOfUrlAndPubId, fieldName) => {
@@ -16,7 +21,7 @@ export const emitSocketEvent = (
   EVENT_NAME,
   data,
   { singleUser = false, multipleUser = false, socketsId = [] }
-) => { 
+) => {
   console.log(socketsId);
   if (!singleUser && !multipleUser) socket.emit(EVENT_NAME, data);
   else if (singleUser) socket.to(socketsId[0]).emit(EVENT_NAME, data);
@@ -25,13 +30,20 @@ export const emitSocketEvent = (
 export const listenSocketEvent = (socket, EVENT_NAME, eventHandler) => {
   socket.on(EVENT_NAME, (clientData) => {
     // clientData = JSON.parse(clientData);
-    console.log({clientData});
+    console.log({ clientData });
     eventHandler(clientData);
   });
 };
 export const cloudinaryInstance = cloudinary;
-export const getDataUri = async (file)=>{
+export const getDataUri = (file) => {
   const parser = new dataUriparser();
   console.log(file.originalname);
-  return parser.format(file.originalname.split('.')[0],file.buffer);
-}
+  return parser.format(file.originalname.split(".")[0], file.buffer);
+};
+export const isFriendOnline = (friends, isPopulated = false) => {
+  for (let i of friends) {
+    if (!isPopulated && usersSocket.get(String(i))) return true;
+    else if (isPopulated && usersSocket.get(String(i?._id))) return true;
+  }
+  return false;
+};

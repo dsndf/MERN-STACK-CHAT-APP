@@ -51,11 +51,27 @@ export const api = createApi({
       providesTags: ["Chat_Details"],
     }),
     getChatMessages: builder.query({
-      query: ({ chatId }) => ({
-        url: server + "/chat/messages/" + chatId,
+      query: ({ chatId, page }) => ({
+        url: server + "/chat/messages/" + chatId + "?page=" + page,
         credentials: "include",
       }),
       providesTags: ["Messages"],
+    }),
+    sendMessage: builder.mutation({
+      query: ({ chatId, message }) => ({
+        url: "/chat/send/message/" + chatId,
+        method: "POST",
+        body: { content: message },
+        credentials: "include",
+      }),
+    }),
+    sendAttachments: builder.mutation({
+      query: ({ formData, chatId }) => ({
+        url: "/chat/send/attachments" + "/" + chatId,
+        credentials: "include",
+        method: "POST",
+        body: formData,
+      }),
     }),
   }),
 });
@@ -68,5 +84,7 @@ export const {
   useCreateNewGroupMutation,
   useLazyGetNotificationsQuery,
   useGetChatDetailsQuery,
-  useGetChatMessagesQuery
+  useGetChatMessagesQuery,
+  useSendMessageMutation,
+  useSendAttachmentsMutation,
 } = api;

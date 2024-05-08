@@ -13,6 +13,7 @@ import {
 } from "../controllers/user.js";
 import { authentication } from "../middlewares/authentication.js";
 import {
+  getMyFriendsValidator,
   loginValidator,
   replyFriendRequestValidator,
   sendFriendRequestValidator,
@@ -49,4 +50,3 @@ userRouter
 userRouter.route("/logout").get(logoutUser);
 
 userRouter.route("/friends").get(getMyFriends);
-

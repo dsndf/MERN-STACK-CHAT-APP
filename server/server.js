@@ -11,11 +11,10 @@ import { adminRouter } from "./routers/adminRouter.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { listenSocketEvent, emitSocketEvent } from "./lib/helper.js";
-import { faker } from "@faker-js/faker";
+
 import cors from "cors";
 import cloudinary from "cloudinary";
 import { socketAuthentication } from "./middlewares/socketAuthentication.js";
-import { createMessages } from "./seeders/messages.js";
 
 // ............SEEDERS...........
 // import { createUsers } from "./seeders/users.js";
@@ -83,10 +82,17 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  console.log({ socket: socket.id });
   const user = socket.request.user;
   if (user) {
     usersSocket.set(String(user._id), socket.id);
+    const friendsockets = [];
+    for (let i of usersSocket.entries()) {
+      const id = i[0];
+      const socketId = i[1];
+      if (user.friends.includes(id)) friendsockets.push(socketId);
+    }
+    console.log({ friendsockets });
+    socket.to(friendsockets).emit("I am online");
   }
   console.log(usersSocket);
   listenSocketEvent(
@@ -117,6 +123,7 @@ io.on("connection", (socket) => {
   socket.on("connected-message", (name) => {});
   socket.on("disconnect", (reason) => {
     console.log(socket.id + " disconnected due to " + reason);
+    usersSocket.delete(String(user._id));
   });
 });
 

@@ -2,8 +2,19 @@ import { Chat } from "../models/chat.js";
 import { User } from "../models/user.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { emitEvent } from "../events/emitEvent.js";
-import { ALERT, MESSAGE_ALERT, MESSAGE_SENT, REFECTH_CHATS } from "../events/eventTypes.js";
-import { getFileUrls, getOtherMembers } from "../lib/helper.js";
+import {
+  ALERT,
+  MESSAGE_ALERT,
+  MESSAGE_SENT,
+  REFECTH_CHATS,
+} from "../events/eventTypes.js";
+import {
+  cloudinaryInstance,
+  getDataUri,
+  getFileUrls,
+  getOtherMembers,
+  isFriendOnline,
+} from "../lib/helper.js";
 import { Message } from "../models/message.js";
 import { createAttachments } from "../seeders/messages.js";
 import { ErrorHandler } from "../utils/errorHandler.js";
@@ -49,6 +60,7 @@ export const getMyChats = catchAsyncError(async (req, res, next) => {
       name: singleReciever ? singleReciever.name : chat.name,
       avatar: singleReciever ? [singleReciever.avatar] : membersAvatars,
       _id: chat._id,
+      isOnline: isFriendOnline(getOtherMembers(chat.members, me, true), true),
     };
   });
   // req.io
@@ -198,7 +210,7 @@ export const deleteChat = catchAsyncError(async (req, res, next) => {
   res.json({ success: true, message: "Leaved Successfully" });
 });
 
-export const sendAttachments = catchAsyncError(async (req, res, next) => {
+export const sendMessage = catchAsyncError(async (req, res, next) => {
   const files = req.files; // will use this during cloudinary config
 
   const { content } = req.body;
@@ -211,24 +223,7 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
   const attachments = createAttachments(5);
   const chatName = chat.isGroup
     ? chat.name
-    : getOtherMembers(chat.members, req.user._id)[0].name;
-
-  const messageOFAttachmentsForRealTime = {
-    sender: { name: req.user.name, _id: req.user._id },
-    attachments,
-    chat: chat._id,
-    content,
-    createdAt: new Date()
-  };
-  emitEvent(
-    req,
-    MESSAGE_ALERT,
-    {
-      users: chat.members,
-      message: messageOFAttachmentsForRealTime,
-    },
-    `Message sent to ${chatName}`
-  );
+    : getOtherMembers(chat.members, req.user._id, true)[0].name;
 
   const messageOFAttachmentsForDB = await Message.create({
     sender: req.user._id,
@@ -236,10 +231,21 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
     chat: chat._id,
     content,
   });
+
+  const messageOFAttachmentsForRealTime = {
+    sender: { name: req.user.name, _id: req.user._id },
+    attachments,
+    chat: chat._id,
+    content,
+    createdAt: messageOFAttachmentsForDB.createdAt,
+  };
+  emitEvent(req, MESSAGE_ALERT, {
+    users: chat.members,
+    message: messageOFAttachmentsForRealTime,
+  });
   res.status(201).json({
     success: true,
     message: "sent successfully",
-    messageOFAttachmentsForDB,
   });
 });
 
@@ -270,7 +276,7 @@ export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
 export const getChatDetails = catchAsyncError(async (req, res, next) => {
   const { chat_id } = req.params;
   const populate = req.query.populate;
-
+  const me = req.user._id;
   let query = Chat.findById(chat_id);
   let chat = await query;
   const { members } = chat;
@@ -283,6 +289,9 @@ export const getChatDetails = catchAsyncError(async (req, res, next) => {
   if (populate === "true") {
     query = query.clone().populate("members", "name avatar").lean();
     chat = await query;
+    if (!chat.isGroup) {
+      chat.name = getOtherMembers(chat.members, me, true)?.[0]?.name;
+    }
   }
   res.json({ success: true, chat });
 });
@@ -305,14 +314,73 @@ export const editGroupName = catchAsyncError(async (req, res, next) => {
 
 export const getMessages = catchAsyncError(async (req, res, next) => {
   const { chat_id } = req.params;
+  console.log("gettmessage called");
   const me = req.user._id;
-
+  const { page = 1 } = req.query;
+  const limit = 5;
+  const skip = (page - 1) * limit;
   const chat = await Chat.findById(chat_id);
   if (!chat.members.includes(String(me))) {
     return next(new ErrorHandler("You don't have access to this chat", 403));
   }
 
-  const messages = await Message.find({ chat: chat_id });
-  const totalMessages = messages.length;
-  res.json({ success: true, totalMessages, messages });
+  const dbQuery = Message.find({ chat: chat_id }).sort({ createdAt: -1 });
+
+  const messagesCount = (await dbQuery).length;
+  const totalPages = Math.ceil(messagesCount / limit);
+  const totalMessages = messagesCount;
+
+  const messages = (
+    await dbQuery
+      .clone()
+      .populate("sender", "avatar name")
+      .skip(skip)
+      .limit(limit)
+  ).reverse();
+
+  res.json({
+    success: true,
+    totalMessages,
+    messages,
+    paginatedCount: messages.length,
+    totalPages,
+  });
+});
+
+export const sendAttachments = catchAsyncError(async (req, res, next) => {
+  const files = req.files;
+  const me = req.user._id;
+  if (!files) return next(new ErrorHandler("Please provide attachments", 400));
+  const { chat_id } = req.params;
+
+  const chat = await Chat.findById(chat_id);
+  if (!chat) return next(new ErrorHandler("Chat not found", 404));
+
+  let filesUri = files.map((file) => getDataUri(file));
+  console.log({ filesUri });
+  let attachments = [];
+  for (let i of filesUri) {
+    const myCloud = await cloudinaryInstance.v2.uploader.upload(i?.content, {
+      folder: "Attachments",
+    });
+    attachments.push({ url: myCloud.secure_url, public_id: myCloud.public_id });
+  }
+  let messageForDb = {
+    chat: chat_id,
+    attachments,
+    sender: me,
+    content: "",
+  };
+
+  const message = await Message.create(messageForDb);
+  let messageForRealTime = {
+    sender: me,
+    attachments,
+    createdAt: message.createdAt,
+  };
+  emitEvent(req, MESSAGE_ALERT, {
+    message: messageForRealTime,
+    users: chat.members,
+  });
+  res.json({ success: true, message: "Sent" });
 });

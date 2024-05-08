@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Box } from "@mui/material";
 
 const ChatList = ({ chats, activeChatId }) => {
-  console.log({ activeChatId });
   return (
     <Box sx={{ width: { xs: "300px", md: "auto" } }}>
       {chats &&
@@ -16,7 +15,8 @@ const ChatList = ({ chats, activeChatId }) => {
                 _id={chat?._id}
                 name={chat?.name}
                 avatar={chat?.avatar}
-                isSelected={Number(activeChatId) === i + 1}
+                isSelected={activeChatId === chat?._id}
+                isOnline={chat?.isOnline}
               />
             </Link>
           );

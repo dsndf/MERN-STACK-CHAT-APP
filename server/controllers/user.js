@@ -1,6 +1,6 @@
 import { tokenCookieOptions } from "../constants/cookie.js";
 import { emitEvent } from "../events/emitEvent.js";
-import { ALERT, NOTIFICATION } from "../events/eventTypes.js";
+import { ALERT, NOTIFICATION, OFFLINE } from "../events/eventTypes.js";
 import {
   cloudinaryInstance,
   getDataUri,
@@ -9,6 +9,7 @@ import {
 import { Chat } from "../models/chat.js";
 import { Request } from "../models/request.js";
 import { User } from "../models/user.js";
+import { usersSocket } from "../server.js";
 import { ErrorHandler } from "../utils/ErrorHandler.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { sendUserResponse } from "../utils/sendUserResponse.js";
@@ -52,7 +53,6 @@ export const getMyProfile = catchAsyncError(async (req, res, next) => {
 });
 
 export const searchUsers = catchAsyncError(async (req, res, next) => {
-  // throw new Error("Server Errorss")
   const { keyword } = req.query;
   console.log("called");
   const myFriends = req.user.friends;
@@ -149,7 +149,7 @@ export const getMyNotifications = catchAsyncError(async (req, res, next) => {
       { reciever: me },
       { $or: [{ status: "Pending" }, { status: "Accepted" }] },
     ],
-  }).populate("sender","name avatar");
+  }).populate("sender", "name avatar");
   const newNotifications = notifications.filter(
     (notification) => notification.status === "Pending"
   );
@@ -207,24 +207,20 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
 
 export const logoutUser = catchAsyncError(async (req, res, next) => {
   res.clearCookie("chatIoToken");
+  
+  const myFriends = req.user.friends;
+
+  emitEvent(req,OFFLINE,{users:myFriends});
   res.json({ success: true, message: "Logged out successfully" });
 });
 
 export const getMyFriends = catchAsyncError(async (req, res, next) => {
   const me = req.user._id;
-  const { chat_id, keyword } = req.query;
-  let friends = [];
-  if (chat_id) {
-    const chat = await Chat.findById(chat_id).populate(
-      "members",
-      "name avatar"
-    );
-    if (!chat) return next(new ErrorHandler("Chat not found", 404));
-    friends = getOtherMembers(chat.members, me);
-  }
+  const { keyword } = req.query;
   const myFriends = await User.findById({ _id: me })
     .populate("friends", "name avatar")
     .select("friends -_id");
+
   const filteredFriends = myFriends.friends.filter((friend) => {
     let regex = new RegExp(keyword, "gi");
     return regex.test(friend.name);

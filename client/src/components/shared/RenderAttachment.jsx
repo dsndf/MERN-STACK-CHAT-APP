@@ -2,7 +2,8 @@ import { FileOpen } from "@mui/icons-material";
 import React from "react";
 import { transformImage } from "../../lib/features";
 
-const RenderAttachment = ({ file, url }) => {
+const RenderAttachment = ({ file, url}) => {
+
   switch (file) {
     case "image":
       return  <img

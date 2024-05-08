@@ -9,7 +9,7 @@ const ChatListItem = ({
   _id,
   groupChat = false,
   sameSender,
-  isOnline,
+  isOnline = false,
   newMessage,
   index = 0,
   handleDeleteChatOpen,
@@ -32,13 +32,15 @@ const ChatListItem = ({
           </Box>
         }
         action={
-          <Box
-            mt={"1.2rem"}
-            width={"0.5rem"}
-            height={"0.5rem"}
-            borderRadius={"100%"}
-            bgcolor={onlineColor}
-          ></Box>
+          isOnline && (
+            <Box
+              mt={"1.2rem"}
+              width={"0.5rem"}
+              height={"0.5rem"}
+              borderRadius={"100%"}
+              bgcolor={onlineColor}
+            ></Box>
+          )
         }
       />
     </Card>

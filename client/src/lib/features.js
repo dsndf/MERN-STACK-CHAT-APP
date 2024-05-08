@@ -37,6 +37,5 @@ export const getLast7days = () => {
 };
 
 export const getMessageSenderData = (chatMembers, sender) => {
-    console.log({chatMembers,sender});
   return chatMembers && chatMembers.find((member) => member._id === sender);
 };

@@ -1,18 +1,18 @@
 import express from "express";
 import {
   addMembers,
-  createNewChat,
   createNewGroup,
   getMyChats,
   getMyGroups,
   deleteGroupChat,
   leaveGroup,
   removeMember,
-  sendAttachments,
+  sendMessage,
   deleteChat,
   getChatDetails,
   editGroupName,
   getMessages,
+  sendAttachments,
 } from "../controllers/chat.js";
 
 import { authentication } from "../middlewares/authentication.js";
@@ -25,6 +25,7 @@ import {
   editGroupNameValidator,
   removeMemberValidator,
   sendAttachmentsValidator,
+  sendMessageValidator,
 } from "../validators/chat.js";
 
 import { validateHandler } from "../validators/validator.js";
@@ -45,12 +46,7 @@ chatRouter
   .patch(removeMemberValidator(), validateHandler, removeMember);
 chatRouter
   .route("/send/message/:chat_id")
-  .post(
-    multipleFiles,
-    sendAttachmentsValidator(),
-    validateHandler,
-    sendAttachments
-  );
+  .post(sendMessageValidator(), validateHandler, sendMessage);
 chatRouter
   .route("/edit/group/name/:chat_id")
   .patch(editGroupNameValidator(), validateHandler, editGroupName);
@@ -68,3 +64,12 @@ chatRouter
   .route("/messages/:chat_id")
   .get(chatIdValidator(), validateHandler, getMessages);
 
+chatRouter
+  .route("/send/attachments/:chat_id")
+  .post(
+    multipleFiles,
+    sendAttachmentsValidator(),
+    validateHandler,
+    sendAttachments
+  );
+ 

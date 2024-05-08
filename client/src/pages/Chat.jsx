@@ -13,69 +13,100 @@ import { hoverMainBg, mainBg } from "../constants/color";
 import AttachFileMenu from "../components/dialog/AttachFileMenu.jsx";
 import { useDialog } from "../hooks/useDialog.js";
 import MessageComponent from "../components/shared/MessageComponent.jsx";
-import { sampleMessages } from "../constants/sampleData.js";
-import { fileFormat, getMessageSenderData } from "../lib/features.js";
-import RenderAttachment from "../components/shared/RenderAttachment.jsx";
 import {
   useGetChatDetailsQuery,
   useGetChatMessagesQuery,
+  useSendAttachmentsMutation,
+  useSendMessageMutation,
 } from "../redux/api/query.js";
-import { useResponseSuccessError } from "../hooks/useResponseSuccessError.js";
 import { useParams, useSearchParams } from "react-router-dom";
-import { useInputValidation } from "6pp";
+import { useInfiniteScrollTop, useInputValidation } from "6pp";
 import { useDispatchAndSelector } from "../hooks/useDispatchAndSelector.js";
 import { useAddEvents } from "../hooks/useAddEvents.js";
 import { getSocket } from "../context/SocketApiContext.jsx";
+import toast from "react-hot-toast";
+import { useMutation } from "../hooks/useMutation.js";
 
 const Chat = () => {
   const { id: chatId } = useParams();
+  const [page, setPage] = useState(1);
   const populate = useSearchParams()[0].get("populate");
   const attachFileDialogAnchorEleRef = useRef();
   const messageToSend = useInputValidation("");
   const socket = getSocket();
+
+  //.... ref....
+  const containerRef = useRef(null);
+  const containerBottomRef = useRef(null);
+
+  const scrollDownOnMessage = (eleRef) => {
+    eleRef?.current?.scrollIntoView();
+  };
+
   const {
     state: { user },
   } = useDispatchAndSelector("auth");
-  const attachFileDialog = useDialog({ value: true });
-  const [oldMessages, setOldMessages] = useState([]);
+  const attachFileDialog = useDialog({});
+  const [newMessages, setNewMessages] = useState([]);
+
+  //MUTATIONS
+  const executeSendMessageMutation = useMutation({
+    hook: useSendMessageMutation,
+  });
+  const exceuteSendAttachmentMutation = useMutation({
+    hook: useSendAttachmentsMutation,
+  });
+  //QUERIES
   const chatDetails = useGetChatDetailsQuery({ chatId, populate });
-  const oldMessagesChunks = useGetChatMessagesQuery({ chatId });
+  const oldMessagesChunks = useGetChatMessagesQuery(
+    { chatId, page },
+    { skip: !chatId }
+  );
   const oldMessagesChunksData = oldMessagesChunks.data;
   const chatDetailsData = chatDetails.data;
-  useResponseSuccessError(chatDetails, oldMessagesChunks);
-  console.log({
-    CHAT_DETAILS: chatDetailsData?.chat,
-    messages: oldMessagesChunksData?.messages,
-  });
+
+  const { data: oldMessages, setData: setOldMessages } = useInfiniteScrollTop(
+    containerRef,
+    oldMessagesChunksData?.totatPages,
+    page,
+    setPage,
+    oldMessagesChunksData?.messages
+  );
+
+  console.log({ oldMessages, newMessages });
+
   const MessageAlert = {
     event: "message-alert",
     eventHandler: (message) => {
-      setOldMessages((prev) => [...prev, message]);
+      setNewMessages((prev) => [...prev, message]);
     },
   };
 
-  const sendMessageHanlder = () => {
-    const messageForRealTime = {
-      sender: user?._id,
-      createdAt: new Date(),
-      content: messageToSend.value,
-      attachments: [],
-    };
-    console.log({ messageForRealTime });
+  const sendMessageHandler = (e) => {
+    e.preventDefault();
 
-    setOldMessages((prev) => [...prev, messageForRealTime]);
+    executeSendMessageMutation({ chatId, message: messageToSend.value });
   };
 
-  useEffect(() => {
-    if (oldMessagesChunksData?.messages)
-      setOldMessages((prev) => [...oldMessagesChunksData.messages, ...prev]);
-  }, [oldMessagesChunksData]);
+  const sendAttachmentsHandler = (e) => {
+    const files = e.target.files;
+    if (files.length > 5) return toast.error("Only 5 files can be sent");
 
-  useEffect(() => {
-    setOldMessages([]);
-  }, [chatId]);
+    const myForm = new FormData();
+    Object.values(files).forEach((file) => myForm.append("files", file));
+
+    scrollDownOnMessage(containerRef);
+    exceuteSendAttachmentMutation({
+      chatId: chatDetailsData?.chat?._id,
+      formData: myForm,
+    });
+  };
+  const allMessages = [...oldMessages, ...newMessages];
 
   useAddEvents(MessageAlert);
+  useEffect(() => {
+    scrollDownOnMessage(containerBottomRef);
+  }, [newMessages]);
 
   return (
     <>
@@ -87,6 +118,8 @@ const Chat = () => {
           position={"relative"}
         >
           <Stack
+            component={"div"}
+            ref={containerRef}
             p={"1rem"}
             direction={"column"}
             position={"absolute"}
@@ -96,48 +129,32 @@ const Chat = () => {
             height={"calc(100% - 4rem)"}
             sx={{ overflowY: "scroll" }}
           >
-            {oldMessages &&
-              oldMessages.map(
+            {allMessages &&
+              allMessages.map(
                 ({ sender, attachments, content, createdAt, _id }) => {
-                  console.log({ attachments });
                   return (
                     <Fragment key={_id}>
-                      {attachments.length > 0 &&
-                        attachments.map(({ url, public_id }) => {
-                          const file = fileFormat(url);
-                          return (
-                            <Box key={public_id}>
-                              <a
-                                href={url}
-                                target="_blank"
-                                download
-                                style={{ color: "black" }}
-                              >
-                                <RenderAttachment url={url} file={file} />
-                              </a>
-                            </Box>
-                          );
-                        })}
-                      {content && (
-                        <MessageComponent
-                          sender={getMessageSenderData(
-                            chatDetailsData?.chat?.members,
-                            sender
-                          )}
-                          content={content}
-                          createdAt={createdAt}
-                        />
-                      )}
+                      <MessageComponent
+                        attachments={attachments}
+                        sender={sender}
+                        content={content}
+                        createdAt={createdAt}
+                      />
                     </Fragment>
                   );
                 }
               )}
+            <Box visibility={"hidden"} ref={containerBottomRef}></Box>
           </Stack>
-          <StyledChatForm>
+          <StyledChatForm
+            onSubmit={sendMessageHandler}
+            encType="multipart/form-data"
+          >
             <AttachFileMenu
               open={attachFileDialog.open}
               closeHandler={attachFileDialog.closeHandler}
               anchorEle={attachFileDialogAnchorEleRef.current}
+              sendAttachmentsHandler={sendAttachmentsHandler}
             />
             <Box sx={{ position: "relative" }}>
               <IconButton
@@ -160,7 +177,7 @@ const Chat = () => {
                 onChange={messageToSend.changeHandler}
               />
               <IconButton
-                onClick={sendMessageHanlder}
+                type="submit"
                 sx={{
                   bgcolor: mainBg,
                   "&:hover": { bgcolor: hoverMainBg },

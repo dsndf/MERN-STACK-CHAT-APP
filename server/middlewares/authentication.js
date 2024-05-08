@@ -7,7 +7,7 @@ export const authentication = catchAsyncError(async (req, res, next) => {
   const { chatIoToken } = req.cookies;
   console.log({ chatIoToken });
   if (!chatIoToken) return next(new ErrorHandler("Token expired.", 401));
-  
+
   const decodeToken = jwt.verify(chatIoToken, process.env.SECRET_KEY);
   if (!decodeToken?._id)
     return next(

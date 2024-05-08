@@ -9,19 +9,27 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import UserList from "./UserList";
-import { users } from "../../constants/sampleData";
 import { Search } from "@mui/icons-material";
 import {
   useCreateNewGroupMutation,
   useLazyGetFriendsQuery,
 } from "../../redux/api/query";
-import { useResponseSuccessError } from "../../hooks/useResponseSuccessError";
 import { useInputValidation } from "6pp";
+import { useErrors } from "../../hooks/useErrors";
+import { useMutation } from "../../hooks/useMutation";
 
 const NewGroup = ({ open, closeHandler }) => {
   const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
-  const [createNewGroup, createNewGroupResponse] = useCreateNewGroupMutation();
-  useResponseSuccessError(getFriendsResponse, createNewGroupResponse);
+  const executeCreateNewGroupMutation = useMutation({
+    hook: useCreateNewGroupMutation,
+    loadingMessage: "Creating new group...",
+  });
+  useErrors({
+    isError: getFriendsResponse.isError,
+    error: getFriendsResponse.error,
+    state: getFriendsResponse,
+  });
+
   const [selectedMembers, setSeletedMembers] = useState([]);
   const searchPeople = useInputValidation("");
   const selectGroupMemberHandler = (id) => {
@@ -32,14 +40,12 @@ const NewGroup = ({ open, closeHandler }) => {
     });
   };
   const doneButtonClickHandler = () => {
-    createNewGroup({ members: selectedMembers, name: "Team Hanuman" });
+    executeCreateNewGroupMutation({
+      members: selectedMembers,
+      name: "Team Hanuman",
+    });
+    closeHandler();
   };
-  useEffect(() => {
-    console.log(selectedMembers);
-    if (createNewGroupResponse.isSuccess) {
-      setSeletedMembers([]);
-    }
-  }, [selectedMembers, createNewGroupResponse.isSuccess]);
   useEffect(() => {
     getFriends({ keyword: searchPeople.value });
   }, [searchPeople.value]);
@@ -75,7 +81,6 @@ const NewGroup = ({ open, closeHandler }) => {
             variant="contained"
             color="primary"
             onClick={doneButtonClickHandler}
-            disabled={createNewGroupResponse.isLoading}
           >
             Done
           </Button>

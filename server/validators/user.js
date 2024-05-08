@@ -1,4 +1,6 @@
 import { body, buildCheckFunction, check, cookie } from "express-validator";
+import { chatIdValidator } from "./chat.js";
+import { query } from "express";
 
 export const signupValidator = () => {
   return [
@@ -31,4 +33,8 @@ export const checkAdminAuthorization = (field) => {
     console.log(req.body[field]);
     return true;
   };
+};
+
+export const getMyFriendsValidator = () => {
+  return [chatIdValidator()];
 };
