@@ -21,6 +21,8 @@ import { ErrorHandler } from "../utils/errorHandler.js";
 
 export const createNewGroup = catchAsyncError(async (req, res, next) => {
   let { name, members } = req.body;
+  const creatorName = req.user?.name;
+
   members = [...members, req.user._id];
   const newGroup = await Chat.create({
     name,
@@ -29,8 +31,12 @@ export const createNewGroup = catchAsyncError(async (req, res, next) => {
     creator: req.user._id,
   });
 
-  emitEvent(req, ALERT, { users: members }, "Welcome to the" + name);
-  emitEvent(req, REFECTH_CHATS, { users: members });
+  emitEvent(
+    req,
+    REFECTH_CHATS,
+    { users: members },
+    `${creatorName} created ${newGroup.name}`
+  );
 
   res.status(201).json({
     success: true,

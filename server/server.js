@@ -15,6 +15,7 @@ import { listenSocketEvent, emitSocketEvent } from "./lib/helper.js";
 import cors from "cors";
 import cloudinary from "cloudinary";
 import { socketAuthentication } from "./middlewares/socketAuthentication.js";
+import { REFECTH_CHATS } from "./events/eventTypes.js";
 
 // ............SEEDERS...........
 // import { createUsers } from "./seeders/users.js";
@@ -92,7 +93,7 @@ io.on("connection", (socket) => {
       if (user.friends.includes(id)) friendsockets.push(socketId);
     }
     console.log({ friendsockets });
-    socket.to(friendsockets).emit("I am online");
+    socket.to(friendsockets).emit(REFECTH_CHATS);
   }
   console.log(usersSocket);
   listenSocketEvent(

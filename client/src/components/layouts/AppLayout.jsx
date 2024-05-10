@@ -5,7 +5,7 @@ import {
 import Footer from "./Footer";
 import Header from "./Header";
 import { Drawer, Stack } from "@mui/material";
-
+import GroupsIcon from '@mui/icons-material/Groups';
 import Profile from "../specific/Profile";
 import ChatList from "../specific/ChatList";
 import { useParams } from "react-router-dom";
@@ -13,6 +13,7 @@ import { useGetMyChatsQuery } from "../../redux/api/query";
 import { useDialog } from "../../hooks/useDialog";
 import { getSocket } from "../../context/SocketApiContext";
 import { useAddEvents } from "../../hooks/useAddEvents";
+import toast from "react-hot-toast";
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
@@ -22,15 +23,12 @@ const AppLayout = () => (WrappedComponent) => {
 
     useAddEvents(
       {
-        event: "I am online",
+        event: "REFETCH_CHATS",
         eventHandler: (message) => {
-          refetch();
-        },
-      },
-      {
-        event: "I am offline",
-        eventHandler: (message) => {
-        console.log("i am off")
+          if (message)
+            toast(message, {
+              duration: 3000,
+            });
           refetch();
         },
       }

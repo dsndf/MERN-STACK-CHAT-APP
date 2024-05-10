@@ -1,5 +1,5 @@
 export const ALERT = "alert";
-export const REFECTH_CHATS = "refetch_chats";
+export const REFECTH_CHATS = "REFETCH_CHATS";
 export const MEMBER_REMOVED = "member_removed";
 export const MESSAGE_SENT = "message_sent";
 export const MESSAGE_ALERT = "message-alert";

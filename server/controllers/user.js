@@ -1,6 +1,11 @@
 import { tokenCookieOptions } from "../constants/cookie.js";
 import { emitEvent } from "../events/emitEvent.js";
-import { ALERT, NOTIFICATION, OFFLINE } from "../events/eventTypes.js";
+import {
+  ALERT,
+  NOTIFICATION,
+  OFFLINE,
+  REFECTH_CHATS,
+} from "../events/eventTypes.js";
 import {
   cloudinaryInstance,
   getDataUri,
@@ -207,10 +212,10 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
 
 export const logoutUser = catchAsyncError(async (req, res, next) => {
   res.clearCookie("chatIoToken");
-  
+
   const myFriends = req.user.friends;
 
-  emitEvent(req,OFFLINE,{users:myFriends});
+  emitEvent(req, REFECTH_CHATS, { users: myFriends });
   res.json({ success: true, message: "Logged out successfully" });
 });
 
