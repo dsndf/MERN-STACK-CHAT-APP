@@ -11,10 +11,10 @@ const ChatListItem = ({
   sameSender,
   isOnline = false,
   newMessage,
-  index = 0,
   handleDeleteChatOpen,
   isSelected = false,
 }) => {
+ 
   return (
     <Card variant="outlined" sx={{ bgcolor: isSelected && selected }}>
       <CardHeader

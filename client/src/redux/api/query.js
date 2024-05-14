@@ -55,6 +55,7 @@ export const api = createApi({
         url: server + "/chat/messages/" + chatId + "?page=" + page,
         credentials: "include",
       }),
+      keepUnusedDataFor:0,
       providesTags: ["Messages"],
     }),
     sendMessage: builder.mutation({

@@ -7,9 +7,9 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import React, { Fragment, Suspense, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserList from "./UserList";
-import { Search } from "@mui/icons-material";
+import { Group, Search } from "@mui/icons-material";
 import {
   useCreateNewGroupMutation,
   useLazyGetFriendsQuery,
@@ -18,9 +18,8 @@ import { useInputValidation } from "6pp";
 import { useErrors } from "../../hooks/useErrors";
 import { useMutation } from "../../hooks/useMutation";
 import { getSocket } from "../../context/SocketApiContext";
-import { useDialog } from "../../hooks/useDialog";
-import { lazy } from "react";
-const GroupNameDialog = lazy(() => import("../dialog/GroupNameDialog"));
+import toast from "react-hot-toast";
+
 const NewGroup = ({ open, closeHandler }) => {
   const socket = getSocket();
   const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
@@ -34,12 +33,10 @@ const NewGroup = ({ open, closeHandler }) => {
     error: getFriendsResponse.error,
     state: getFriendsResponse,
   });
-  const groupNameDialog = useDialog({
-    onCloseFunction: () => closeHandler(),
-  });
 
   const [selectedMembers, setSeletedMembers] = useState([]);
   const searchPeople = useInputValidation("");
+  const groupName = useInputValidation("");
   const selectGroupMemberHandler = (id) => {
     setSeletedMembers((prev) => {
       if (prev.includes(id)) {
@@ -48,61 +45,67 @@ const NewGroup = ({ open, closeHandler }) => {
     });
   };
   const doneButtonClickHandler = () => {
+    executeCreateNewGroupMutation({
+      members: selectedMembers,
+      name: groupName.value,
+    });
     closeHandler();
-    groupNameDialog.openHandler();
   };
   useEffect(() => {
     getFriends({ keyword: searchPeople.value });
   }, [searchPeople.value]);
   return (
-    <Fragment>
-      {" "}
-      <Dialog open={open} onClose={closeHandler}>
-        <Stack p={"1rem"} width={350}>
-          <DialogTitle textAlign={"center"}>New Group</DialogTitle>
-          <TextField
-            value={searchPeople.value}
-            onChange={searchPeople.changeHandler}
-            placeholder="Search people here."
-            size="small"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
+    <Dialog open={open} onClose={closeHandler}>
+      <Stack p={"1rem"} width={350}>
+        <DialogTitle textAlign={"center"}>New Group</DialogTitle>
+        <TextField
+          value={searchPeople.value}
+          onChange={searchPeople.changeHandler}
+          placeholder="Search people here."
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <br />
+        <TextField
+          value={groupName.value}
+          onChange={groupName.changeHandler}
+          placeholder="Name"
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Group />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Stack>
+          <UserList
+            users={getFriendsResponse?.data?.friends}
+            handler={selectGroupMemberHandler}
+            selectedUsersList={selectedMembers}
           />
-          <Stack>
-            <UserList
-              users={getFriendsResponse?.data?.friends}
-              handler={selectGroupMemberHandler}
-              selectedUsersList={selectedMembers}
-            />
-          </Stack>{" "}
-          <DialogActions>
-            <Button variant="text" color="error" onClick={closeHandler}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={doneButtonClickHandler}
-            >
-              Done
-            </Button>
-          </DialogActions>
-        </Stack>
-      </Dialog>
-      {groupNameDialog.open && (
-        <Suspense>
-          <GroupNameDialog
-            open={groupNameDialog.open}
-            onClose={groupNameDialog.closeHandler}
-          />
-        </Suspense>
-      )}
-    </Fragment>
+        </Stack>{" "}
+        <DialogActions>
+          <Button variant="text" color="error" onClick={closeHandler}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={doneButtonClickHandler}
+          >
+            Done
+          </Button>
+        </DialogActions>
+      </Stack>
+    </Dialog>
   );
 };
 

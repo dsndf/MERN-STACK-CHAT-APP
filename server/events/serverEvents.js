@@ -1,0 +1,17 @@
+export const ALERT = "alert";
+export const REFETCH_CHATS = "REFETCH_CHATS";
+export const MEMBER_REMOVED = "member_removed";
+export const MESSAGE_SENT = "message_sent";
+export const MESSAGE_ALERT = "message-alert";
+export const OFFLINE = "I am offline";
+export const ONLINE = "I am online";
+export const REFETCH_CHAT_DETAILS = "refetch_chat_details";
+export const NOTIFICATION = "notification";
+export const LEAVE_CHAT = "LEAVE_CHAT";
+export const JOIN_CHAT = "JOIN_CHAT";
+export const LEAVE_CHAT_NOTIFY = "LEAVE_CHAT_NOTIFY";
+export const JOIN_CHAT_NOTIFY = "JOIN_CHAT_NOTIFY";
+export const START_TYPING = "START TYPING";
+export const TYPING_STARTED = "TYPING STARTED";
+export const TYPING_STOPPED = "TYPING STOPPED";
+export const STOP_TYPING = "STOP_TYPING";

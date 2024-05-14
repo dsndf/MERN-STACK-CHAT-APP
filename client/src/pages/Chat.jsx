@@ -1,4 +1,11 @@
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   StyledChatColumn,
   StyledChatForm,
@@ -19,25 +26,39 @@ import {
   useSendAttachmentsMutation,
   useSendMessageMutation,
 } from "../redux/api/query.js";
-import { useParams, useSearchParams } from "react-router-dom";
-import { useInfiniteScrollTop, useInputValidation } from "6pp";
+import { useLocation } from "react-router-dom";
+import { useInfiniteScrollTop } from "6pp";
 import { useDispatchAndSelector } from "../hooks/useDispatchAndSelector.js";
 import { useAddEvents } from "../hooks/useAddEvents.js";
 import { getSocket } from "../context/SocketApiContext.jsx";
 import toast from "react-hot-toast";
 import { useMutation } from "../hooks/useMutation.js";
+import Typing from "../components/shared/Typing.jsx";
+import {
+  TYPING_STOPPED,
+  START_TYPING,
+  TYPING_STARTED,
+} from "../events/clientEvents.js";
+import { STOP_TYPING } from "../../../server/events/serverEvents.js";
 
-const Chat = () => {
-  const { id: chatId } = useParams();
-  const [page, setPage] = useState(1);
-  const populate = useSearchParams()[0].get("populate");
-  const attachFileDialogAnchorEleRef = useRef();
-  const messageToSend = useInputValidation("");
+const Chat = ({ chatId: currentChatId }) => {
   const socket = getSocket();
-
+  const [isTyping, setIsTyping] = useState(false);
+  const [page, setPage] = useState(1);
+  const attachFileDialogAnchorEleRef = useRef();
+  const [message, setMessage] = useState("");
+  const pathname = useLocation().pathname;
   //.... ref....
   const containerRef = useRef(null);
   const containerBottomRef = useRef(null);
+
+  const messageChangeHandler = (e) => {
+    setMessage(e.target.value);
+    socket.emit(START_TYPING, {
+      chatId: currentChatId,
+      members: chatDetailsData?.chat?.members,
+    });
+  };
 
   const scrollDownOnMessage = (eleRef) => {
     eleRef?.current?.scrollIntoView();
@@ -46,6 +67,7 @@ const Chat = () => {
   const {
     state: { user },
   } = useDispatchAndSelector("auth");
+
   const attachFileDialog = useDialog({});
   const [newMessages, setNewMessages] = useState([]);
 
@@ -57,14 +79,17 @@ const Chat = () => {
     hook: useSendAttachmentsMutation,
   });
   //QUERIES
-  const chatDetails = useGetChatDetailsQuery({ chatId, populate });
-  const oldMessagesChunks = useGetChatMessagesQuery(
-    { chatId, page },
-    { skip: !chatId }
+  const chatDetails = useGetChatDetailsQuery(
+    { chatId: currentChatId, populate: false },
+    { skip: !currentChatId }
   );
+
+  const oldMessagesChunks = useGetChatMessagesQuery({
+    chatId: currentChatId,
+    page,
+  });
   const oldMessagesChunksData = oldMessagesChunks.data;
   const chatDetailsData = chatDetails.data;
-
   const { data: oldMessages, setData: setOldMessages } = useInfiniteScrollTop(
     containerRef,
     oldMessagesChunksData?.totatPages,
@@ -73,19 +98,12 @@ const Chat = () => {
     oldMessagesChunksData?.messages
   );
 
-  console.log({ oldMessages, newMessages });
-
-  const MessageAlert = {
-    event: "message-alert",
-    eventHandler: (message) => {
-      setNewMessages((prev) => [...prev, message]);
-    },
-  };
-
   const sendMessageHandler = (e) => {
     e.preventDefault();
-
-    executeSendMessageMutation({ chatId, message: messageToSend.value });
+    executeSendMessageMutation({
+      chatId: currentChatId,
+      message: message,
+    });
   };
 
   const sendAttachmentsHandler = (e) => {
@@ -101,16 +119,79 @@ const Chat = () => {
       formData: myForm,
     });
   };
-  const allMessages = [...oldMessages, ...newMessages];
 
-  useAddEvents(MessageAlert);
+  const onStopTyping = useMemo(() => {
+    let tid;
+    return () => {
+      if (tid) clearTimeout(tid);
+      tid = setTimeout(() => {
+        socket.emit(STOP_TYPING, {
+          chatId: currentChatId,
+          members: chatDetailsData?.chat?.members,
+        });
+      }, 2000);
+    };
+  }, [socket, currentChatId, chatDetails.status]);
+
+  const typingStarted = useCallback(
+    ({ chatId }) => {
+      if (currentChatId === chatId) setIsTyping(true);
+    },
+    [setIsTyping, currentChatId]
+  );
+  const typingStopped = useCallback(
+    ({ chatId }) => {
+      if (currentChatId === chatId) setIsTyping(false);
+    },
+    [setIsTyping, currentChatId]
+  );
+  const messageAlert = useCallback(
+    ({ chatMessage, chatId }) => {
+      console.log({ currentChatId, chatId });
+      if (currentChatId !== chatId) return;
+      setIsTyping(false);
+      setNewMessages((prev) => [...prev, chatMessage]);
+    },
+    [setNewMessages, currentChatId]
+  );
+
+  useAddEvents(
+    [
+      {
+        event: "message-alert",
+        eventHandler: messageAlert,
+      },
+      {
+        event: TYPING_STARTED,
+        eventHandler: typingStarted,
+      },
+      {
+        event: TYPING_STOPPED,
+        eventHandler: typingStopped,
+      },
+    ],
+    { dependencies: [currentChatId] }
+  );
+
   useEffect(() => {
     scrollDownOnMessage(containerBottomRef);
   }, [newMessages]);
 
+  useEffect(() => {
+    return () => {
+      setOldMessages([]);
+      setNewMessages([]);
+      setPage(1);
+      setMessage("");
+    };
+  }, [currentChatId]);
+  const allMessages = [...oldMessages, ...newMessages];
+  console.log({ currentChatId, newMessages, oldMessages });
+  
   return (
     <>
       <Title title={"Chat"} description={"User Chat"} />
+
       <StyledChatColumn>
         <Stack
           height={"100%"}
@@ -144,7 +225,12 @@ const Chat = () => {
                   );
                 }
               )}
-            <Box visibility={"hidden"} ref={containerBottomRef}></Box>
+            {isTyping && <Typing />}
+            <Box
+              visibility={"hidden"}
+              border={"2px solid red"}
+              ref={containerBottomRef}
+            ></Box>
           </Stack>
           <StyledChatForm
             onSubmit={sendMessageHandler}
@@ -173,8 +259,9 @@ const Chat = () => {
               </IconButton>
               <StyledChatFormInputBox
                 placeholder="Type message"
-                value={messageToSend.value}
-                onChange={messageToSend.changeHandler}
+                value={message}
+                onChange={messageChangeHandler}
+                onKeyUp={onStopTyping}
               />
               <IconButton
                 type="submit"

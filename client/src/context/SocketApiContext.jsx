@@ -30,7 +30,7 @@ const SocketApiContext = ({ children }) => {
     socket.on("connect_error", async (err) => {
       toast.error(err.message);
     });
-  }, []);  
+  }, []);
   useEffect(() => {
     if (isAuth) {
       socket.connect();
@@ -49,3 +49,4 @@ const SocketApiContext = ({ children }) => {
 export default memo(SocketApiContext);
 export const getSocket = () => useContext(SocketContext).socket;
 export const getSocketId = () => useContext(SocketApiContext).socketId;
+

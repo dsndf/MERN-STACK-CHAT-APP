@@ -4,8 +4,8 @@ import {
   ALERT,
   NOTIFICATION,
   OFFLINE,
-  REFECTH_CHATS,
-} from "../events/eventTypes.js";
+  REFETCH_CHATS,
+} from "../events/serverEvents.js";
 import {
   cloudinaryInstance,
   getDataUri,
@@ -212,10 +212,8 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
 
 export const logoutUser = catchAsyncError(async (req, res, next) => {
   res.clearCookie("chatIoToken");
-
   const myFriends = req.user.friends;
-
-  emitEvent(req, REFECTH_CHATS, { users: myFriends });
+  emitEvent(req, OFFLINE, { users: myFriends });
   res.json({ success: true, message: "Logged out successfully" });
 });
 

@@ -10,16 +10,23 @@ import { adminRouter } from "./routers/adminRouter.js";
 
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { listenSocketEvent, emitSocketEvent } from "./lib/helper.js";
+import { getOtherMembers, getSockets } from "./lib/helper.js";
 
 import cors from "cors";
 import cloudinary from "cloudinary";
 import { socketAuthentication } from "./middlewares/socketAuthentication.js";
-import { REFECTH_CHATS } from "./events/eventTypes.js";
+import {
+
+  OFFLINE,
+  ONLINE,
+  START_TYPING,
+  STOP_TYPING,
+} from "./events/serverEvents.js";
 
 // ............SEEDERS...........
 // import { createUsers } from "./seeders/users.js";
-// import { createMessages } from "./seeders/messages.js";
+import { createMessages } from "./seeders/messages.js";
+import { Chat } from "./models/chat.js";
 // ............**SEEDERS**...........
 
 process.on("uncaughtException", (err) => {
@@ -43,7 +50,7 @@ cloudinary.v2.config({
   cloud_name: "dt9cg0trl",
 });
 connectDB(process.env.MONGODB_URI);
-// createMessages(20);
+//  createMessages(40);
 
 const port = process.env.PORT || 4000;
 
@@ -75,6 +82,7 @@ server.listen(port, () => {
 });
 // Mapping between user id and socket id .............
 export const usersSocket = new Map();
+export const onlineUsers = new Set();
 
 io.use((socket, next) => {
   cookieParser()(socket.request, null, async (err) => {
@@ -84,47 +92,39 @@ io.use((socket, next) => {
 
 io.on("connection", (socket) => {
   const user = socket.request.user;
+  const userId = user._id;
   if (user) {
     usersSocket.set(String(user._id), socket.id);
-    const friendsockets = [];
-    for (let i of usersSocket.entries()) {
-      const id = i[0];
-      const socketId = i[1];
-      if (user.friends.includes(id)) friendsockets.push(socketId);
-    }
-    console.log({ friendsockets });
-    socket.to(friendsockets).emit(REFECTH_CHATS);
-  }
-  console.log(usersSocket);
-  listenSocketEvent(
-    socket,
-    "MESSAGE",
-    async ({ sender, content, members, chatId }) => {
-      const messageForRealTime = {
-        sender,
-        content,
-        chat: chatId,
-        createdAt: new Date().toISOString(),
-      };
-      console.log({ members });
-      const socketsId = members.map((id) => usersSocket.get(id));
-
-      emitSocketEvent(socket, "RECIEVE_MESSAGE", messageForRealTime, {
-        multipleUser: true,
-        socketsId: socketsId,
+    onlineUsers.add(String(user._id));
+    const friendsockets = getSockets(user.friends);
+    if (friendsockets.length > 0)
+      io.to(friendsockets).emit(ONLINE, {
+        onlineUsers: Array.from(onlineUsers),
       });
-    }
-  );
+  }
 
-  listenSocketEvent(socket, "connected-message", (clientData) => {
-    console.log(clientData);
-    emitSocketEvent(socket, "WISH", "Welcome to chat app " + clientData, {});
+  socket.on(START_TYPING, ({ chatId, members }) => {
+    const otherMemberSockets = getSockets(getOtherMembers(members, userId));
+    if(!otherMemberSockets.length) return;
+    io.to(otherMemberSockets).emit("TYPING STARTED", { chatId });
+  }); 
+  socket.on(STOP_TYPING, ({ chatId, members }) => {
+    const otherMemberSockets = getSockets(getOtherMembers(members, userId));
+    if(!otherMemberSockets.length) return;
+    io.to(otherMemberSockets).emit("TYPING STOPPED", { chatId });
   });
 
-  socket.on("connected-message", (name) => {});
   socket.on("disconnect", (reason) => {
+    const isDeleted = onlineUsers.delete(String(userId));
+    if (isDeleted) console.log("user deleted");
+    const friendsockets = getSockets(user.friends);
+    if (friendsockets.length > 0) {
+      io.to(friendsockets).emit(OFFLINE, {
+        onlineUsers: Array.from(onlineUsers),
+      });
+    }
     console.log(socket.id + " disconnected due to " + reason);
-    usersSocket.delete(String(user._id));
+    usersSocket.delete(String(userId));
   });
 });
 
@@ -132,6 +132,7 @@ app.use(customErrorHandler); // added custom error handler as last middleware to
 
 process.on("unhandledRejection", (err) => {
   server.close(() => {
+    usersSocket.clear();
     console.log("🤔 Server closed due to " + err.message);
     process.exit(1);
   });

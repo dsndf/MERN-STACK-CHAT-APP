@@ -47,3 +47,12 @@ export const isFriendOnline = (friends, isPopulated = false) => {
   }
   return false;
 };
+
+export const getSockets = (users) => {
+  const friendsockets = [];
+  for (let i of users) {
+    const isSocketExist = usersSocket.get(String(i));
+    if (isSocketExist) friendsockets.push(isSocketExist);
+  }
+  return friendsockets;
+};

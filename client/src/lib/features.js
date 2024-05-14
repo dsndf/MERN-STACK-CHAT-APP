@@ -39,3 +39,10 @@ export const getLast7days = () => {
 export const getMessageSenderData = (chatMembers, sender) => {
   return chatMembers && chatMembers.find((member) => member._id === sender);
 };
+export const checkIsOnline = (onlineUsers=[],chatMembers=[])=>{
+  console.log({onlineUsers,chatMembers})
+for(let user of onlineUsers){
+  if(chatMembers.includes(user)) return true;
+}
+return false;
+}

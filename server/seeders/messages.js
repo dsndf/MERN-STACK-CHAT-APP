@@ -18,10 +18,10 @@ export const createMessages = async (numofMessages) => {
 
   for (let i = 0; i < numofMessages; i++) {
     messages.push({
-      sender: new Types.ObjectId(),
-      content: faker.string.sample({ max: 10 }),
+      sender: new Types.ObjectId("6603949bbd873a6ef2fdbd0c"),
+      content: faker.animal.bird(),
       attachments: createAttachments(0),
-      chat: "66128a1dbc2193fe89ab46ad",
+      chat: "661285de4c8598d88fc353b8",
     });
   }
   await Message.insertMany(messages);
