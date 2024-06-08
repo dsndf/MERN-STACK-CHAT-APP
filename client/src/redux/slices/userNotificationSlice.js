@@ -1,37 +1,40 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  searchedUsers: [],
-  notifications: [],
   notifyCount: localStorage.chatIO_NotifyCount
     ? JSON.parse(localStorage.chatIO_NotifyCount)
     : 0,
   loading: false,
+  isNotified: false,
 };
 export const userNotificationSlice = createSlice({
   name: "userNotification",
   initialState,
   reducers: {
-    setSearchedUsers(state, action) {
-      state.searchedUsers = action.payload;
-      state.loading = false;
-    },
     setUserNotificationLoading(state, action) {
       state.loading = action.payload;
     },
     setNotifications(state, action) {
       state.notifications = action.payload;
     },
-    setNotificationCount(state, action) {
-      state.notifyCount = action.payload;
+    incrementNotificationCount(state, action) {
+      state.notifyCount++;
       localStorage.setItem("chatIO_NotifyCount", String(state.notifyCount));
+    },
+    resetNotificationCount(state, action) {
+      state.notifyCount = 0;
+      localStorage.setItem("chatIO_NotifyCount", String(state.notifyCount));
+    },
+    setIsNotified(state, action) {
+      state.isNotified = action.payload;
     },
   },
 });
 
 export const {
-  setNotificationCount,
+incrementNotificationCount,
+resetNotificationCount,
   setNotifications,
-  setSearchedUsers,
   setUserNotificationLoading,
+  setIsNotified,
 } = userNotificationSlice.actions;

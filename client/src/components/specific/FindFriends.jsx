@@ -6,90 +6,74 @@ import {
   CircularProgress,
   Dialog,
   DialogActions,
+  DialogContent,
   DialogTitle,
   InputAdornment,
-  Skeleton,
   Stack,
   TextField,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import UserList from "./UserList";
-import { users } from "../../constants/sampleData";
-import { toast } from "react-hot-toast";
 import {
   useLazySearchUserQuery,
   useSendFriendRequestMutation,
 } from "../../redux/api/query";
-import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector";
-import {
-  setSearchedUsers,
-  setUserNotificationLoading,
-} from "../../redux/slices/userNotificationSlice";
-import { useResponseSuccessError } from "../../hooks/useResponseSuccessError";
+import { useMutation } from "../../hooks/useMutation";
 
 const FindFriends = ({ open, closeHandler }) => {
+  // Searching users code start
   const search = useInputValidation("");
-  const [searchUser, results] = useLazySearchUserQuery();
-  const [sendFriendRequest, sendFriendRequestResponse] =
-    useSendFriendRequestMutation();
-  useResponseSuccessError(sendFriendRequestResponse);
-
-  const {
-    dispatch,
-    state: { searchedUsers },
-  } = useDispatchAndSelector("userNotification");
-
+  const [searchUsers, searchUsersResult] = useLazySearchUserQuery();
   useEffect(() => {
-    dispatch(setUserNotificationLoading(true));
-    const tid = setTimeout(() => {
-      searchUser(search.value);
-    }, 1500);
+    let tid = setTimeout(() => {
+      searchUsers(search.value);
+    }, 2000);
     return () => clearTimeout(tid);
   }, [search.value]);
+  // Searching users code end
 
-  useEffect(() => {
-    if (results.isSuccess) {
-      console.log(results);
-      dispatch(setSearchedUsers(results.data.users));
-    }
-  }, [results]);
-  console.log(sendFriendRequest);
+  // Send Friend req  code start
+  const executeSendFriendReqMutation = useMutation({
+    hook: useSendFriendRequestMutation,
+  });
+  // Send Friend req  code end
+
   return (
     <Dialog open={open}>
-      <Stack p={"1rem"} width={350}>
-        <DialogTitle textAlign={"center"}>Find Friends</DialogTitle>
-        <TextField
-          variant="outlined"
-          type="text"
-          size="small"
-          value={search.value}
-          onChange={search.changeHandler}
-          placeholder="Search new friends here"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-        />
-        {results.isFetching && (
+      <DialogTitle textAlign={"center"}>Find Friends</DialogTitle>{" "}
+      <TextField
+        variant="outlined"
+        type="text"
+        size="small"
+        value={search.value}
+        onChange={search.changeHandler}
+        placeholder="Search new friends here"
+        sx={{ m: "1rem" }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search />
+            </InputAdornment>
+          ),
+        }}
+      />
+      <DialogContent sx={{ width: "20rem", py: 0 }}>
+        {searchUsersResult.isFetching && (
           <Box mt={2} textAlign={"center"}>
             <CircularProgress size={20} />
           </Box>
         )}
         <Box>
           <UserList
-            users={searchedUsers}
-            handler={sendFriendRequest}
+            users={searchUsersResult.data?.users || []}
+            handler={executeSendFriendReqMutation}
             isFriendRequest={true}
           />
         </Box>
-
-        <DialogActions>
-          <Button onClick={closeHandler}>Close</Button>
-        </DialogActions>
-      </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={closeHandler}>Close</Button>
+      </DialogActions>
     </Dialog>
   );
 };

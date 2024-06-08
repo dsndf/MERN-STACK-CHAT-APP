@@ -44,7 +44,7 @@ const App = () => {
   useEffect(() => {
     dispatch(loadUser());
   }, [dispatch]);
-  
+
   useEffect(() => {
     if (err) {
       toast.error(err);

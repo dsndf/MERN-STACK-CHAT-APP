@@ -3,7 +3,7 @@ import React from "react";
 import moment from "moment";
 import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector";
 import RenderAttachment from "./RenderAttachment";
-import { fileFormat } from "../../lib/features";
+import { fileFormat, transformImage } from "../../lib/features";
 import { mainBg } from "../../constants/color";
 
 const MessageComponent = ({
@@ -34,13 +34,19 @@ const MessageComponent = ({
             justifyContent={"flex-start"}
             alignItems={"center"}
           >
-            <Avatar src={sender?.avatar?.url} sx={{ width: 24, height: 24 }} />
+            {!isMe && (
+              <Avatar
+                src={sender?.avatar?.url}
+                sx={{ width: 24, height: 24 }}
+              />
+            )}
+
             <Typography
               variant="caption"
               sx={{ color: isMe ? mainBg : "black" }}
               fontWeight={500}
             >
-              {isMe ? "You" : sender?.name}
+              {!isMe && sender?.name}
             </Typography>
           </Stack>
 
@@ -70,12 +76,12 @@ const MessageComponent = ({
                 sx={{ color: isMe ? mainBg : "black" }}
                 fontWeight={500}
               >
-                {isMe ? "You" : sender?.name}
+                {!isMe && sender?.name}
               </Typography>
               <Box>
                 {" "}
                 <a
-                  href={url}
+                  href={transformImage(url)}
                   target="_blank"
                   download
                   style={{ color: "black" }}

@@ -40,6 +40,8 @@ import {
   TYPING_STARTED,
 } from "../events/clientEvents.js";
 import { STOP_TYPING } from "../../../server/events/serverEvents.js";
+import { useDispatch } from "react-redux";
+import { clearNewMessageCount } from "../redux/slices/chatSlice.js";
 
 const Chat = ({ chatId: currentChatId }) => {
   const socket = getSocket();
@@ -47,7 +49,7 @@ const Chat = ({ chatId: currentChatId }) => {
   const [page, setPage] = useState(1);
   const attachFileDialogAnchorEleRef = useRef();
   const [message, setMessage] = useState("");
-  const pathname = useLocation().pathname;
+  const dispatch = useDispatch();
   //.... ref....
   const containerRef = useRef(null);
   const containerBottomRef = useRef(null);
@@ -178,6 +180,7 @@ const Chat = ({ chatId: currentChatId }) => {
   }, [newMessages]);
 
   useEffect(() => {
+    dispatch(clearNewMessageCount(currentChatId));
     return () => {
       setOldMessages([]);
       setNewMessages([]);
@@ -187,7 +190,7 @@ const Chat = ({ chatId: currentChatId }) => {
   }, [currentChatId]);
   const allMessages = [...oldMessages, ...newMessages];
   console.log({ currentChatId, newMessages, oldMessages });
-  
+
   return (
     <>
       <Title title={"Chat"} description={"User Chat"} />

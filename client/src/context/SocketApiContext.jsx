@@ -49,4 +49,3 @@ const SocketApiContext = ({ children }) => {
 export default memo(SocketApiContext);
 export const getSocket = () => useContext(SocketContext).socket;
 export const getSocketId = () => useContext(SocketApiContext).socketId;
-

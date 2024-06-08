@@ -4,16 +4,18 @@ import {
   Drawer,
   Grid,
   IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, {
+  Fragment,
+  Suspense,
+  lazy,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { lightGrayBg } from "../constants/color";
 import {
   KeyboardBackspace,
@@ -23,14 +25,23 @@ import {
   Add,
   People,
   Close,
+  Done,
+  Cancel,
 } from "@mui/icons-material";
 import { useDialog } from "../hooks/useDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import GroupListItem from "../components/shared/GroupListItem";
 import GroupList from "../components/specific/GroupList";
-import { useInputValidation } from "6pp";
 import { users } from "../constants/sampleData";
-import UserListItem from "../components/shared/UserListItem";
+import {
+  useDeleteGroupMutation,
+  useEditGroupNameMutation,
+  useGetMyGroupsQuery,
+} from "../redux/api/query.js";
+import { useDispatch, useSelector } from "react-redux";
+import UserList from "../components/specific/UserList.jsx";
+import { setSelectedGroup } from "../redux/slices/miscSlice.js";
+import { useMutation } from "../hooks/useMutation.js";
+import FindFreindsSkeleton from "../components/skeleton/FindFreindsSkeleton.jsx";
 
 const ConfirmDeleteDialog = lazy(() =>
   import("../components/dialog/ConfirmDeleteDialog.jsx")
@@ -42,15 +53,11 @@ const AddGroupMemberDialog = lazy(() =>
 const Groups = () => {
   const drawer = useDialog({});
   const navigate = useNavigate();
-  const groupName = useSearchParams()[0].get("group");
   const deleteGroupDialog = useDialog({});
   const addGroupMemberDialog = useDialog({});
 
   const [removedMembers, setRemovedMembers] = useState([]);
-  const [isGroupNameEdit, setIsGroupNameEdit] = useState(false);
-  const editGroupName = useInputValidation(groupName);
-
-  const groupNameEditHandler = () => setIsGroupNameEdit(!isGroupNameEdit);
+  const dispatch = useDispatch();
 
   const navigateBack = () => {
     navigate("/");
@@ -65,13 +72,63 @@ const Groups = () => {
     );
   };
 
-  const deleteGroupHandler = () => {
-    deleteGroupDialog.closeHandler();
+  const executeDeleteGroupMutation = useMutation({
+    hook: useDeleteGroupMutation,
+  });
+  const deleteGroupHandler = async () => {
+    await executeDeleteGroupMutation({ chatId: selectedGroup?._id });
+    dispatch(setSelectedGroup({ group: {}, isSelected: false }));
   };
   const addGroupMemberSaveChangesHandler = () => {
     addGroupMemberDialog.closeHandler();
   };
-  useEffect(() => console.log({ removedMembers }), [removedMembers]);
+
+  const myGroups = useGetMyGroupsQuery();
+
+  // GROUP NAME EDIT CODE STARTS
+
+  const groupName = useSearchParams()[0].get("group");
+  const [newGroupName, setNewGroupName] = useState("");
+  const { isGroupSelected, selectedGroup } = useSelector(
+    (state) => state["misc"]
+  );
+  const [isGroupNameEdit, setIsGroupNameEdit] = useState(false);
+  const groupNameEditHandler = () => {
+    setIsGroupNameEdit(true);
+  };
+  const cancelToEditGroupName = () => {
+    setIsGroupNameEdit(false);
+    setNewGroupName(groupName);
+  };
+
+  const newGroupNameChangeHandler = (e) => setNewGroupName(e.target.value);
+
+  useEffect(() => {
+    if (groupName) {
+      setNewGroupName(groupName);
+      setIsGroupNameEdit(false);
+    }
+  }, [groupName]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(setSelectedGroup({ group: {}, isSelected: false }));
+    };
+  }, []);
+
+  const executeEditGroupNameMutation = useMutation({
+    hook: useEditGroupNameMutation,
+    loadingMessage: "Updating group",
+  });
+
+  const updateGroupName = async () => {
+    await executeEditGroupNameMutation({
+      name: newGroupName,
+      chatId: selectedGroup._id,
+    });
+    navigate("/");
+  };
+  // GROUP NAME EDIT CODE END
 
   const GroupName = (
     <>
@@ -85,21 +142,38 @@ const Groups = () => {
           {isGroupNameEdit ? (
             <TextField
               variant="outlined"
-              value={editGroupName.value}
-              onChange={editGroupName.changeHandler}
+              value={newGroupName}
+              onChange={newGroupNameChangeHandler}
             />
           ) : (
             <Typography variant="h4" color="initial">
-              {groupName || "Group XYZ"}
+              {selectedGroup?.name || "Group XYZ"}
             </Typography>
           )}
-
-          <IconButton
-            sx={{ height: "fit-content" }}
-            onClick={groupNameEditHandler}
-          >
-            <Edit />
-          </IconButton>
+          {!isGroupNameEdit && (
+            <IconButton
+              sx={{ height: "fit-content" }}
+              onClick={groupNameEditHandler}
+            >
+              <Edit />
+            </IconButton>
+          )}
+          {isGroupNameEdit && (
+            <IconButton
+              sx={{ height: "fit-content" }}
+              onClick={updateGroupName}
+            >
+              <Done />
+            </IconButton>
+          )}
+          {isGroupNameEdit && (
+            <IconButton
+              sx={{ height: "fit-content" }}
+              onClick={groupNameEditHandler}
+            >
+              <Cancel />
+            </IconButton>
+          )}
         </Stack>
       </Box>
     </>
@@ -118,19 +192,18 @@ const Groups = () => {
         alignItems={"center"}
         borderRadius={"5px"}
       >
-        <Stack alignItems={"center"}>
-          {users &&
-            users.map(({ _id, name, avatar }) => {
-              return (
-                <UserListItem
-                  key={_id}
-                  username={name}
-                  avatar={avatar?.url}
-                  accept={!removedMembers.includes(_id)}
-                  handler={() => removeMemberHandler(_id)}
-                />
-              );
-            })}
+        <Stack
+          alignItems={"center"}
+          width={"100%"}
+          maxHeight={"15rem"}
+          sx={{ overflow: "auto" }}
+        >
+          {users && (
+            <UserList
+              users={users}
+              selectedUsersList={users.map(({ _id }) => _id)}
+            />
+          )}
         </Stack>
         <Stack direction={"row"} spacing={"1rem"}>
           <Button
@@ -160,7 +233,7 @@ const Groups = () => {
         md={4}
         bgcolor={lightGrayBg}
       >
-        <GroupList />
+        <GroupList groupList={myGroups.data?.groups} />
       </Grid>
       <Grid item xs={12} md={8}>
         <Box
@@ -189,44 +262,54 @@ const Groups = () => {
             {drawer.open ? <Close /> : <Menu />}
           </IconButton>
         </Box>
-        <Drawer open={drawer.open} onClose={drawer.closeHandler}>
-          <GroupList />
-        </Drawer>
-        {GroupName}
-        <Typography
-          variant="h6"
-          color="initial"
-          display={"flex"}
-          alignItems={"center"}
-          gap={"0.5rem"}
-          p={"1.2rem"}
-        >
-          <People /> Members
-        </Typography>
-        {GroupMembersBox}
-        <Suspense fallback={<h6>LOAIND</h6>}>
-          {deleteGroupDialog.open && (
-            <ConfirmDeleteDialog
-              open={deleteGroupDialog.open}
-              openHanlder={deleteGroupDialog.openHandler}
-              closeHandler={deleteGroupDialog.closeHandler}
-              deleteAction={deleteGroupHandler}
-              title={"Delete Group"}
-              content={"Are you sure you want to delete this group"}
-            />
-          )}
-        </Suspense>
-        <Suspense fallback={<h6>LOAIND</h6>}>
-          {addGroupMemberDialog.open && (
-            <AddGroupMemberDialog
-              open={addGroupMemberDialog.open}
-              openHanlder={addGroupMemberDialog.openHandler}
-              closeHandler={addGroupMemberDialog.closeHandler}
-              saveChangesAction={addGroupMemberSaveChangesHandler}
-            />
-          )}
-        </Suspense>
+
+        {isGroupSelected ? (
+          <Fragment>
+            {GroupName}
+            <Typography
+              variant="h6"
+              color="initial"
+              display={"flex"}
+              alignItems={"center"}
+              gap={"0.5rem"}
+              p={"1.2rem"}
+            >
+              <People /> Members
+            </Typography>
+            {GroupMembersBox}
+            <Suspense fallback={<h6>LOAIND</h6>}>
+              {deleteGroupDialog.open && (
+                <ConfirmDeleteDialog
+                  open={deleteGroupDialog.open}
+                  openHanlder={deleteGroupDialog.openHandler}
+                  closeHandler={deleteGroupDialog.closeHandler}
+                  deleteAction={deleteGroupHandler}
+                  title={"Delete Group"}
+                  content={"Are you sure you want to delete this group"}
+                />
+              )}
+            </Suspense>
+
+            <Suspense fallback={<FindFreindsSkeleton />}>
+              {addGroupMemberDialog.open && (
+                <AddGroupMemberDialog
+                  open={addGroupMemberDialog.open}
+                  openHanlder={addGroupMemberDialog.openHandler}
+                  closeHandler={addGroupMemberDialog.closeHandler}
+                  saveChangesAction={addGroupMemberSaveChangesHandler}
+                />
+              )}
+            </Suspense>
+          </Fragment>
+        ) : (
+          <Typography variant="h5" p={"4rem"} textAlign={"center"}>
+            Select a group to edit
+          </Typography>
+        )}
       </Grid>
+      <Drawer open={drawer.open} onClose={drawer.closeHandler}>
+        <GroupList groupList={myGroups.data?.groups} />
+      </Drawer>
     </Grid>
   );
 };

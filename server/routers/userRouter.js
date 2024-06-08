@@ -44,8 +44,8 @@ userRouter
 userRouter.route("/notifications").get(getMyNotifications);
 
 userRouter
-  .route("/reply/friend/request/:id")
-  .patch(replyFriendRequestValidator(), validateHandler, replyfriendRequest);
+  .route("/accept/friend/request/:id")
+  .put(replyFriendRequestValidator(), validateHandler, replyfriendRequest);
 
 userRouter.route("/logout").get(logoutUser);
 

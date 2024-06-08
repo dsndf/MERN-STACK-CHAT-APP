@@ -12,10 +12,19 @@ import { useGetMyChatsQuery } from "../../redux/api/query";
 import { useDialog } from "../../hooks/useDialog";
 import { useAddEvents } from "../../hooks/useAddEvents";
 import toast from "react-hot-toast";
-import { useCallback, useEffect, useState } from "react";
-import { OFFLINE, ONLINE, REFETCH_CHATS } from "../../events/clientEvents";
+import { useCallback, useEffect } from "react";
+import {
+  ALERT,
+  NEW_MESSAGE_COUNT_ALERT,
+  OFFLINE,
+  ONLINE,
+  REFETCH_CHATS,
+} from "../../events/clientEvents";
 import { useDispatch, useSelector } from "react-redux";
-import { setOnlineUsers } from "../../redux/slices/chatSlice";
+import {
+  setNewMessageCount,
+  setOnlineUsers,
+} from "../../redux/slices/chatSlice";
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
@@ -28,7 +37,6 @@ const AppLayout = () => (WrappedComponent) => {
     const dispatch = useDispatch();
 
     const refetchChats = useCallback((message) => {
-      alert(message);
       if (message) toast(message);
       refetch();
     }, []);
@@ -47,8 +55,26 @@ const AppLayout = () => (WrappedComponent) => {
       },
       [setOnlineUsers]
     );
+
+    const newMessageCountAlertEventHandler = useCallback(
+      (data) => {
+        const { chatId } = data;
+        alert(chatId);
+        if (id && id === chatId) return;
+        dispatch(setNewMessageCount(chatId));
+      },
+      [id]
+    );
+    const alertEventHandler = useCallback((message) => {
+      toast.success(message);
+    }, []);
+
     useAddEvents(
       [
+        {
+          event: ALERT,
+          eventHandler: alertEventHandler,
+        },
         {
           event: REFETCH_CHATS,
           eventHandler: refetchChats,
@@ -61,8 +87,18 @@ const AppLayout = () => (WrappedComponent) => {
           event: ONLINE,
           eventHandler: onlineEventHandler,
         },
+        {
+          event: NEW_MESSAGE_COUNT_ALERT,
+          eventHandler: newMessageCountAlertEventHandler,
+        },
       ],
-      { dependencies: [setOnlineUsers] }
+      {
+        dependencies: [
+          onlineEventHandler,
+          offlineEventHandler,
+          newMessageCountAlertEventHandler,
+        ],
+      }
     );
 
     useEffect(() => {

@@ -3,7 +3,15 @@ import { server } from "../../config/settings";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: server }),
-  tagTypes: ["Chats", "User", "Friends", "Chat_Details", "Messages"],
+  tagTypes: [
+    "Chats",
+    "User",
+    "Friends",
+    "Chat_Details",
+    "Messages",
+    "Notifications",
+    "MyGroups",
+  ],
   endpoints: (builder) => ({
     getMyChats: builder.query({
       query: () => ({ url: "/chat/my/chats", credentials: "include" }),
@@ -17,10 +25,10 @@ export const api = createApi({
       providesTags: ["User"],
     }),
     sendFriendRequest: builder.mutation({
-      query: (data) => ({
+      query: (userId) => ({
         url: "user/send/friend/request",
         method: "POST",
-        body: { userId: data },
+        body: { userId },
         credentials: "include",
       }),
       invalidatesTags: ["User"],
@@ -42,6 +50,8 @@ export const api = createApi({
     }),
     getNotifications: builder.query({
       query: () => ({ url: "/user/notifications", credentials: "include" }),
+      keepUnusedDataFor: 0,
+      providesTags: ["Notifications"],
     }),
     getChatDetails: builder.query({
       query: ({ chatId, populate }) => ({
@@ -55,7 +65,7 @@ export const api = createApi({
         url: server + "/chat/messages/" + chatId + "?page=" + page,
         credentials: "include",
       }),
-      keepUnusedDataFor:0,
+      keepUnusedDataFor: 0,
       providesTags: ["Messages"],
     }),
     sendMessage: builder.mutation({
@@ -74,6 +84,45 @@ export const api = createApi({
         body: formData,
       }),
     }),
+    acceptFriendRequest: builder.mutation({
+      query: ({ reqId, accepted }) => ({
+        url: "/user/accept/friend/request/" + reqId,
+        method: "PUT",
+        body: { accepted },
+        credentials: "include",
+      }),
+      invalidatesTags: ["Notifications"],
+    }),
+    getMyGroups: builder.query({
+      query: () => ({ url: "/chat/my/groups", credentials: "include" }),
+      providesTags: ["MyGroups"],
+      keepUnusedDataFor: 0,
+    }),
+
+    editGroupName: builder.mutation({
+      query: ({ name, chatId }) => ({
+        url: "/chat/edit/group/name/" + chatId,
+        credentials: "include",
+        method: "PUT",
+        body: { name },
+      }),
+    }),
+    addMembers: builder.mutation({
+      query: ({ members, chatId: chat_id }) => ({
+        url: "/chat/add/members",
+        method: "PUT",
+        credentials: "include",
+        body: { members, chat_id },
+      }),
+    }),
+    deleteGroup: builder.mutation({
+      query: ({chatId: chat_id }) => ({
+        url: "/chat/delete/group/" + chat_id,
+        method: "DELETE",
+        credentials: "include",
+      }),
+      invalidatesTags:['MyGroups']
+    }),
   }),
 });
 
@@ -83,9 +132,14 @@ export const {
   useSendFriendRequestMutation,
   useLazyGetFriendsQuery,
   useCreateNewGroupMutation,
-  useLazyGetNotificationsQuery,
+  useGetNotificationsQuery,
   useGetChatDetailsQuery,
   useGetChatMessagesQuery,
   useSendMessageMutation,
   useSendAttachmentsMutation,
+  useAcceptFriendRequestMutation,
+  useGetMyGroupsQuery,
+  useEditGroupNameMutation,
+  useAddMembersMutation,
+  useDeleteGroupMutation
 } = api;

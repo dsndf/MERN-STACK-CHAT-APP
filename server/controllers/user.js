@@ -2,15 +2,11 @@ import { tokenCookieOptions } from "../constants/cookie.js";
 import { emitEvent } from "../events/emitEvent.js";
 import {
   ALERT,
-  NOTIFICATION,
+  NOTIFICATION_ALERT,
   OFFLINE,
   REFETCH_CHATS,
 } from "../events/serverEvents.js";
-import {
-  cloudinaryInstance,
-  getDataUri,
-  getOtherMembers,
-} from "../lib/helper.js";
+import { cloudinaryInstance, getDataUri } from "../lib/helper.js";
 import { Chat } from "../models/chat.js";
 import { Request } from "../models/request.js";
 import { User } from "../models/user.js";
@@ -140,10 +136,10 @@ export const sendFreindRequest = catchAsyncError(async (req, res, next) => {
   promises.push(Request.create({ sender: me, reciever: id }));
 
   const requests = await Promise.all(promises);
-  emitEvent(req, NOTIFICATION, { users: [userId] }, "Notification recieved");
+  emitEvent(req, NOTIFICATION_ALERT, { users: [userId] });
   res
     .status(201)
-    .json({ suucess: true, requests, message: "Request Sent to" + user.name });
+    .json({ suucess: true, requests, message: "Request Sent to " + user.name });
 });
 
 export const getMyNotifications = catchAsyncError(async (req, res, next) => {
@@ -170,10 +166,12 @@ export const getMyNotifications = catchAsyncError(async (req, res, next) => {
 });
 
 export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
-  const { reply } = req.body;
+  console.log("REQUEST");
+  const { accepted } = req.body;
   const { id } = req.params;
   const me = req.user._id;
-
+  const reply = accepted ? "Accepted" : "Denied";
+  console.log({ reply });
   const request = await Request.findById(id);
   if (!request) {
     return next(new ErrorHandler("Request not found", 404));
@@ -198,15 +196,9 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
     ]);
     sender.friends.push(req.user._id);
     await sender.save();
-  }
-
-  await request.save();
-  emitEvent(
-    req,
-    ALERT,
-    { users: [request.sender] },
-    `${req.user.name} accepted friend request`
-  );
+    await request.save();
+  } else if (reply === "Denied") await Request.findByIdAndDelete(request._id);
+  emitEvent(req, REFETCH_CHATS, { users: [request.sender, me] });
   res.json({ success: true, message: "Replied successfully." });
 });
 

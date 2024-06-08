@@ -1,30 +1,31 @@
 import React from "react";
 import { Avatar, AvatarGroup, Stack, Typography } from "@mui/material";
-import randomUser from '../../assets/random/chatIOUser.jpg';
+import randomUser from "../../assets/random/chatIOUser.jpg";
+import AvatarCard from "./AvatarCard";
 
-const GroupListItem = ({ chatId, group_id, group_name, avatar }) => {
+const GroupListItem = ({ group_name, avatar, totalMembers}) => {
   return (
+    
     <Stack
       direction={"row"}
       justifyContent={"flex-start"}
-      spacing={2}
-      alignItems={"flex-start"}
-      width={'100%'}
-      p={'0.5rem'}
+      spacing={4}
+      alignItems={"center"}
+      width={"100%"}
+      p={"1rem"}
       bgcolor={"white"}
-      boxShadow={'0 0 5px #a19f9f'}
-       borderRadius={'5px'}
+      boxShadow={"0 0 5px #a19f9f"}
+      borderRadius={"5px"}
+      sx={{ cursor: "pointer" }}
     >
-      <AvatarGroup max={3}>
-        <Avatar src={randomUser} />
-        <Avatar src={randomUser} />
-        <Avatar src={randomUser} />
-        <Avatar src={randomUser} />
-   
-      </AvatarGroup>
+      <AvatarCard max={4} avatar={avatar} />
       <Stack>
-        <Typography variant="p" fontWeight={'600'} color="initial" >6 Pack Warriros</Typography>
-        <Typography variant="caption" color="initial" >This is caption</Typography>
+        <Typography variant="body2" fontWeight={"600"} color="initial">
+          {group_name}
+        </Typography>
+        <Typography variant="caption" color="initial">
+          {totalMembers} members
+        </Typography>
       </Stack>
     </Stack>
   );

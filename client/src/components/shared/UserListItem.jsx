@@ -42,7 +42,7 @@ const UserListItem = ({
         sx={{
           bgcolor: accept && removeColor,
         }}
-       disableRipple
+        disableRipple
         onClick={onButtonClick}
         size="small"
       >

@@ -2,7 +2,7 @@ import { useState } from "react"
 
 export const useDialog = ({ value = false, onCloseFunction, onOpenFunction }) => {
     const [open, setOpen] = useState(value);
-
+    
     const openHandler = () => {
         setOpen(true);
         if (onOpenFunction) {

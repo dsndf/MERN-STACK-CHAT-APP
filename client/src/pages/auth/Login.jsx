@@ -23,13 +23,12 @@ import { validateUsername } from "../../validators/validateUsername";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-
 const Login = () => {
   const [registerToggle, setRegisterToggle] = useState(false);
   const { avatar, avatarChangeHandler, avatarPreview } = useAvatar();
   const {
     dispatch,
-    state: { loading},
+    state: { loading },
   } = useDispatchAndSelector("auth");
   const name = useInputValidation("");
   const username = useInputValidation("", validateUsername);
@@ -70,6 +69,7 @@ const Login = () => {
         alignItems: "center",
         height: "100vh",
         backgroundColor: "#FF9A8B",
+        overflow:"auto",
         backgroundImage:
           "linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%",
       }}
@@ -78,6 +78,7 @@ const Login = () => {
       <Container component={"main"} maxWidth={"xs"}>
         <Paper
           elevation={3}
+          
           sx={{
             padding: 4,
             display: "flex",
@@ -92,7 +93,7 @@ const Login = () => {
 
           {!registerToggle ? (
             <form onSubmit={loginHandler}>
-              {" "}
+       
               <>
                 {" "}
                 <TextField
@@ -147,7 +148,7 @@ const Login = () => {
             </form>
           ) : (
             <form encType="multipart/form-data" onSubmit={registerHandler}>
-              {" "}
+      
               <>
                 <Stack alignItems={"center"} position={"relative"}>
                   <Avatar
@@ -207,25 +208,13 @@ const Login = () => {
                   size="small"
                   value={username.value}
                   onChange={username.changeHandler}
+                  error={username.error}
+                  helperText={username.error}
+        
+                  FormHelperTextProps={{ sx:{fontSize:"14px"} }}
                 />
-                {username.error && (
-                  <Typography
-                    sx={{ color: "red" }}
-                    fontSize={15}
-                    component={"small"}
-                  >
-                    {username.error}
-                  </Typography>
-                )}
-                {!username.error && username.value && (
-                  <Typography
-                    sx={{ color: "green" }}
-                    fontSize={15}
-                    component={"small"}
-                  >
-                    Username pattern matched
-                  </Typography>
-                )}
+
+        
 
                 <TextField
                   type="password"
@@ -237,16 +226,11 @@ const Login = () => {
                   size="small"
                   value={password.value}
                   onChange={password.changeHandler}
+                  error={password.error}
+                  helperText={password.error}
+                  FormHelperTextProps={{ sx:{fontSize:"14px"} }}
                 />
-                {password.error && (
-                  <Typography
-                    sx={{ color: "red" }}
-                    fontSize={15}
-                    component={"small"}
-                  >
-                    {password.error}
-                  </Typography>
-                )}
+          
                 {!password.error && password.value && (
                   <Typography
                     sx={{ color: "green" }}

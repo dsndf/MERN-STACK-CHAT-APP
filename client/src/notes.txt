@@ -2,3 +2,26 @@ To do's
 1. transformFile -- lib
 2. Render file component -- shared
 3. sample messages data -- constant  // done
+import React from 'react';
+import { Avatar, AvatarGroup } from '@mui/material';
+import { styled } from '@mui/system';
+
+const StyledAvatarGroup = styled(AvatarGroup)({
+  '& .MuiAvatar-root': {
+    border: '2px solid white',
+    marginLeft: -8,  // Adjust this value to control the overlap
+  },
+});
+
+const OverlappingAvatarGroup = () => {
+  return (
+    <StyledAvatarGroup max={4}>
+      <Avatar alt="Person 1" src="/static/images/avatar/1.jpg" />
+      <Avatar alt="Person 2" src="/static/images/avatar/2.jpg" />
+      <Avatar alt="Person 3" src="/static/images/avatar/3.jpg" />
+      <Avatar alt="Person 4" src="/static/images/avatar/4.jpg" />
+    </StyledAvatarGroup>
+  );
+};
+
+export default OverlappingAvatarGroup;

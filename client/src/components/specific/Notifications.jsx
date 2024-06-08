@@ -1,18 +1,23 @@
 import React, { useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import { Avatar, Box, Stack, Typography } from "@mui/material";
-import { notifications } from "../../constants/sampleData";
-import { useLazyGetNotificationsQuery } from "../../redux/api/query";
-import { useResponseSuccessError } from "../../hooks/useResponseSuccessError";
-import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector";
-import { setNotifications } from "../../redux/slices/userNotificationSlice";
+import { Avatar, Box, DialogContent, Stack, Typography } from "@mui/material";
+import { Notifications as NotificationsIcon } from "@mui/icons-material";
+import {
+  useAcceptFriendRequestMutation,
+  useGetNotificationsQuery,
+} from "../../redux/api/query";
+import { useMutation } from "../../hooks/useMutation";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  incrementNotificationCount,
+  resetNotificationCount,
+  setIsNotified,
+} from "../../redux/slices/userNotificationSlice";
 
-const NotificationCard = ({ sender }) => {
+const NotificationCard = ({ reqId, sender, handler }) => {
   return (
     <Box maxWidth={"400px"}>
       <Stack
@@ -41,10 +46,22 @@ const NotificationCard = ({ sender }) => {
           </Typography>
         </Stack>
         <DialogActions>
-          <Button color="primary" variant="text">
+          <Button
+            color="primary"
+            variant="text"
+            onClick={() => {
+              handler({ reqId, accepted: true });
+            }}
+          >
             AGREE
           </Button>
-          <Button color="error" variant="text">
+          <Button
+            color="error"
+            variant="text"
+            onClick={() => {
+              handler({ reqId, accepted: false });
+            }}
+          >
             DISAGREE
           </Button>
         </DialogActions>
@@ -53,25 +70,30 @@ const NotificationCard = ({ sender }) => {
   );
 };
 const Notifications = ({ open, closeHandler }) => {
-  const {
-    dispatch,
-    state: { notifications },
-  } = useDispatchAndSelector("userNotification");
-  const [getNotifications, getNotificationsResponse] =
-    useLazyGetNotificationsQuery();
-  useResponseSuccessError({
-    isError: getNotificationsResponse.isError,
-    error: getNotifications.error,
-    isSuccess: getNotificationsResponse.isSuccess,
-    data: getNotificationsResponse.data,
-  });
+  // Get notification code start
+  const notifications = useGetNotificationsQuery();
+  // Get notification code end
+
+  // handling notifiycount start
+  const { isNotified, notifyCount } = useSelector(
+    (state) => state.userNotification
+  );
+  const dispatch = useDispatch();
   useEffect(() => {
-    if (getNotificationsResponse.isUninitialized) getNotifications();
-    if (getNotificationsResponse.isSuccess) 
-      dispatch(
-        setNotifications(getNotificationsResponse.data?.newNotifications)
-      );
-  }, [getNotificationsResponse.isSuccess]);
+    if (notifyCount > 0) dispatch(resetNotificationCount());
+    if (isNotified) {
+      notifications.refetch();
+      dispatch(setIsNotified(false));
+    }
+  }, [isNotified]);
+  // hadnling notifiycount end
+
+  // accept friend request code start
+  const executeAcceptFriendRequestMutation = useMutation({
+    hook: useAcceptFriendRequestMutation,
+  });
+  // accept friend request code end
+
   return (
     <Dialog
       open={open}
@@ -79,12 +101,30 @@ const Notifications = ({ open, closeHandler }) => {
       aria-labelledby={"notification-dialog"}
     >
       <DialogTitle alignItems={"center"}>Notifications</DialogTitle>
-      <Stack spacing={"1rem"} p={"1rem"}>
-        {notifications &&
-          notifications.map(({ sender, _id }) => {
-            return <NotificationCard key={_id} sender={sender} />;
+      <DialogContent sx={{ width: "25rem" }}>
+        {notifications.data &&
+          notifications.data?.newNotifications?.map(({ sender, _id }) => {
+            return (
+              <NotificationCard
+                key={_id}
+                reqId={_id}
+                handler={executeAcceptFriendRequestMutation}
+                sender={sender}
+              />
+            );
           })}
-      </Stack>
+        {!notifications.data?.newNotifications.length && (
+          <Typography
+            fontSize={"large"}
+            color={"GrayText"}
+            display={"flex"}
+            alignItems={"center"}
+          >
+            <NotificationsIcon /> No Notifications Yet
+          </Typography>
+        )}
+      </DialogContent>
+
       <DialogActions>
         <Button color="error" onClick={closeHandler}>
           Close

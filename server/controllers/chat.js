@@ -6,6 +6,7 @@ import {
   ALERT,
   MESSAGE_ALERT,
   MESSAGE_SENT,
+  NEW_MESSAGE_COUNT_ALERT,
   REFETCH_CHATS,
 } from "../events/serverEvents.js";
 import {
@@ -83,7 +84,7 @@ export const getMyGroups = catchAsyncError(async (req, res, next) => {
   let groups = await Chat.find({
     members: { $in: [user._id] },
     isGroup: true,
-    creator: req.user._id,
+    creator: user._id,
   })
     .populate("members", "avatar")
     .lean();
@@ -91,7 +92,7 @@ export const getMyGroups = catchAsyncError(async (req, res, next) => {
     return {
       ...group,
       avatar: getFileUrls(group.members, "avatar"),
-      members: undefined,
+      totalMembers: group.members.length,
     };
   });
 
@@ -126,8 +127,11 @@ export const addMembers = catchAsyncError(async (req, res, next) => {
   group.members.push(...members);
   group.save();
 
-  emitEvent(req, ALERT, { users: members }, `You are added into ${group.name}`);
-  emitEvent(req, REFETCH_CHATS, { user: members });
+  emitEvent(req, ALERT, {
+    users: getOtherMembers(members, req.user._id),
+    message: `You are added into ${group.name}`,
+  });
+  emitEvent(req, REFETCH_CHATS, { users: members });
 
   res.status(200).json({
     success: true,
@@ -245,10 +249,20 @@ export const sendMessage = catchAsyncError(async (req, res, next) => {
     content,
     createdAt: messageOFAttachmentsForDB.createdAt,
   };
-  console.log("message alert to ",chat.members.map((member) => member._id))
+  console.log(
+    "message alert to ",
+    chat.members.map((member) => member._id)
+  );
   emitEvent(req, MESSAGE_ALERT, {
     users: chat.members.map((member) => member._id),
     chatMessage: messageOFAttachmentsForRealTime,
+    chatId: chat._id,
+  });
+  emitEvent(req, NEW_MESSAGE_COUNT_ALERT, {
+    users: getOtherMembers(
+      chat.members.map((member) => member._id),
+      req.user._id
+    ),
     chatId: chat._id,
   });
   res.status(201).json({
@@ -273,7 +287,7 @@ export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
   const groupName = chat.name;
   await Chat.findOneAndDelete({ _id: chat_id });
   emitEvent(req, ALERT, `${groupName} has been deleted`, {
-    members: otherMembers,
+    users: otherMembers,
   });
   emitEvent(req, REFETCH_CHATS, {
     users: [...otherMembers, req.user._id],
@@ -306,6 +320,7 @@ export const getChatDetails = catchAsyncError(async (req, res, next) => {
 
 export const editGroupName = catchAsyncError(async (req, res, next) => {
   const { name } = req.body;
+  console.log({ name });
   const { chat_id } = req.params;
   const myId = req.user._id;
   const group = await Chat.findOne({ _id: chat_id, isGroup: true });
@@ -392,6 +407,7 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
   emitEvent(req, MESSAGE_ALERT, {
     chatMessage: messageForRealTime,
     users: chat.members,
+    chatId: chat._id,
   });
   res.json({ success: true, message: "Sent" });
 });

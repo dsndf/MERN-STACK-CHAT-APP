@@ -14,8 +14,8 @@ export const fileFormat = (url = "") => {
 
   return "file";
 };
-export const transformImage = (url, pixel = 100) => {
-  return url;
+export const transformImage = (url = "", width = 100) => {
+  return url.replace("upload/", `upload/dpr_auto/w_${width}/`);
 };
 
 export const WeekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -39,10 +39,9 @@ export const getLast7days = () => {
 export const getMessageSenderData = (chatMembers, sender) => {
   return chatMembers && chatMembers.find((member) => member._id === sender);
 };
-export const checkIsOnline = (onlineUsers=[],chatMembers=[])=>{
-  console.log({onlineUsers,chatMembers})
-for(let user of onlineUsers){
-  if(chatMembers.includes(user)) return true;
-}
-return false;
-}
+export const checkIsOnline = (onlineUsers = [], chatMembers = []) => {
+  for (let user of onlineUsers) {
+    if (chatMembers.includes(user)) return true;
+  }
+  return false;
+};

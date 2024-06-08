@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogActions,
+  DialogContent,
   DialogTitle,
   List,
   ListItem,
@@ -12,16 +13,13 @@ import UserListItemSkeleton from "./UserListItemSkeleton";
 const FindFreindsSkeleton = () => {
   return (
     <Dialog open>
-      <DialogTitle>
-        <Skeleton variant="text" width={100} />
-      </DialogTitle>
-      <Skeleton variant="rectangle" width={"100%"} />
-      <UserListItemSkeleton />
-      <UserListItemSkeleton />
-      <UserListItemSkeleton />
-      <DialogActions>
-        <Skeleton variant="rectangular" width={"1rem"} height={"1rem"} />
-      </DialogActions>
+      <DialogContent sx={{width:"20rem"}}>
+        <UserListItemSkeleton />
+        <UserListItemSkeleton />
+        <UserListItemSkeleton />
+        <UserListItemSkeleton />
+        <UserListItemSkeleton />
+      </DialogContent>
     </Dialog>
   );
 };

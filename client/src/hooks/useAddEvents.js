@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { getSocket } from "../context/SocketApiContext";
 
-export const useAddEvents = (listeners, { dependencies = [] }) => {
+export const useAddEvents = (
+  listeners,
+  { dependencies } = { dependencies: [] }
+) => {
   const socket = getSocket();
   useEffect(() => {
-
     for (let { event, eventHandler } of listeners) {
       socket.on(event, eventHandler);
     }

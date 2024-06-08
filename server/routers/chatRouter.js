@@ -40,23 +40,23 @@ chatRouter.route("/my/chats").get(getMyChats);
 chatRouter.route("/my/groups").get(getMyGroups);
 chatRouter
   .route("/add/members")
-  .patch(addMembersValidator(), validateHandler, addMembers);
+  .put(addMembersValidator(), validateHandler, addMembers);
 chatRouter
   .route("/remove/member")
-  .patch(removeMemberValidator(), validateHandler, removeMember);
+  .put(removeMemberValidator(), validateHandler, removeMember);
 chatRouter
   .route("/send/message/:chat_id")
   .post(sendMessageValidator(), validateHandler, sendMessage);
 chatRouter
   .route("/edit/group/name/:chat_id")
-  .patch(editGroupNameValidator(), validateHandler, editGroupName);
+  .put(editGroupNameValidator(), validateHandler, editGroupName);
 chatRouter
   .route("/:chat_id")
   .get(chatIdValidator(), validateHandler, getChatDetails)
   .delete(chatIdValidator(), validateHandler, deleteChat);
 chatRouter
   .route("/leave/group/:chat_id")
-  .patch(chatIdValidator(), validateHandler, leaveGroup);
+  .put(chatIdValidator(), validateHandler, leaveGroup);
 chatRouter
   .route("/delete/group/:chat_id")
   .delete(chatIdValidator(), validateHandler, deleteGroupChat);
@@ -72,4 +72,3 @@ chatRouter
     validateHandler,
     sendAttachments
   );
- 

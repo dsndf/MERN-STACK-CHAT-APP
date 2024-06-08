@@ -2,7 +2,7 @@ import { Avatar, Box, Stack, Typography } from "@mui/material";
 import { AlternateEmail, Email, Person } from "@mui/icons-material";
 import randomUser from "../../assets/random/chatIOUser.jpg";
 import { profileContentColor, textColorInDark } from "../../constants/color";
-import React from "react";
+import { useSelector } from "react-redux";
 
 const ProfileCard = ({ title, content, icon }) => {
   return (
@@ -12,7 +12,9 @@ const ProfileCard = ({ title, content, icon }) => {
       spacing={2}
       alignItems={"center"}
       justifyContent={"center"}
-    >  {icon}
+    >
+      {" "}
+      {icon}
       <Stack spacing={1} alignItems={"center"}>
         <Typography
           variant="p"
@@ -22,11 +24,11 @@ const ProfileCard = ({ title, content, icon }) => {
           alignItems={"center"}
           gap={2}
         >
-         {content}
+          {content}
         </Typography>
         <Typography
           variant="p"
-          sx={{ color: profileContentColor,fontSize:"0.9rem" }}
+          sx={{ color: profileContentColor, fontSize: "0.9rem" }}
         >
           {title}
         </Typography>
@@ -36,47 +38,32 @@ const ProfileCard = ({ title, content, icon }) => {
 };
 
 const Profile = () => {
+  const { isAuth, user } = useSelector((state) => state.auth);
   return (
-      <Stack
-        height={"100%"}
-        direction={"column"}
-        alignItems={"center"}
-        justifyContent={"flex-start"}
-        spacing={"2rem"}
-        padding={"3rem 1rem"}
-      >
-        <Stack alignItems={"center"} spacing={2}>
-          <Avatar
-            sx={{
-              width: "110px",
-              height: "110px",
-              fontSize: "25px",
-            }}
-            src={randomUser}
-          />
-
-          <Typography variant="body1" sx={{ color: textColorInDark }}>
-            My status is busy
-          </Typography>
-        </Stack>
-        <ProfileCard
-          title={"Username"}
-          content={"@meAbhiSingh"}
-          icon={
-            <AlternateEmail fontSize="medium" sx={{ color: textColorInDark }} />
-          }
+    <Stack
+      height={"100%"}
+      direction={"column"}
+      alignItems={"center"}
+      justifyContent={"flex-start"}
+      spacing={"2rem"}
+      padding={"3rem 1rem"}
+    >
+      <Stack alignItems={"center"} spacing={2}>
+        <Avatar
+          sx={{
+            padding: "1px",
+            width: "13rem",
+            height: "13rem",
+            border: "2px solid white",
+          }}
+          src={user?.avatar?.url}
         />
-        <ProfileCard
-          title={"Email"}
-          content={"mernstack2999@gmail.com"}
-          icon={<Email fontSize="medium" sx={{ color: textColorInDark }} />}
-        />
-        <ProfileCard
-          title={"Name"}
-          content={"gaurav jain"}
-          icon={<Person fontSize="medium" sx={{ color: textColorInDark }} />}
-        />
+        <Typography variant="h6" color={"white"}>
+          {"Gaurav Jain"}
+        </Typography>
+        {isAuth && "Online"}
       </Stack>
+    </Stack>
   );
 };
 

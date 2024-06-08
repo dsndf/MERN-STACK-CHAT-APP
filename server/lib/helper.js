@@ -12,7 +12,7 @@ export const getOtherMembers = (members, me, isPopulated = false) => {
 export const getFileUrls = (fileListOfUrlAndPubId, fieldName) => {
   const list = fileListOfUrlAndPubId;
   if (fieldName === "avatar") {
-    return list.map(({ avatar }) => avatar.url);
+    return list.map(({ avatar }) => avatar);
   } else return fileListOfUrlAndPubId.map((item) => item.url);
 };
 

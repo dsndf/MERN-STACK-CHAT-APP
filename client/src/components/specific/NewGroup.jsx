@@ -6,8 +6,10 @@ import {
   Stack,
   TextField,
   Button,
+  DialogContent,
+  Box,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import UserList from "./UserList";
 import { Group, Search } from "@mui/icons-material";
 import {
@@ -19,24 +21,21 @@ import { useErrors } from "../../hooks/useErrors";
 import { useMutation } from "../../hooks/useMutation";
 import { getSocket } from "../../context/SocketApiContext";
 import toast from "react-hot-toast";
+import { validateNewGroupName } from "../../validators/validateNewGroupName";
 
 const NewGroup = ({ open, closeHandler }) => {
   const socket = getSocket();
-  const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
-  const executeCreateNewGroupMutation = useMutation({
-    hook: useCreateNewGroupMutation,
-    loadingMessage: "Creating new group...",
-    onSuccess: null,
-  });
-  useErrors({
-    isError: getFriendsResponse.isError,
-    error: getFriendsResponse.error,
-    state: getFriendsResponse,
-  });
-
-  const [selectedMembers, setSeletedMembers] = useState([]);
+  const newGroupName = useInputValidation("", validateNewGroupName);
+  // Get friends code start
   const searchPeople = useInputValidation("");
-  const groupName = useInputValidation("");
+  const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
+  useEffect(() => {
+    getFriends({ keyword: searchPeople.value });
+  }, [searchPeople.value]);
+  // Get friends code end
+
+  // Select members code start
+  const [selectedMembers, setSeletedMembers] = useState([]);
   const selectGroupMemberHandler = (id) => {
     setSeletedMembers((prev) => {
       if (prev.includes(id)) {
@@ -44,67 +43,82 @@ const NewGroup = ({ open, closeHandler }) => {
       } else return [...prev, id];
     });
   };
+  // Select members code end
+
+  // Create new group code start
+  const executeCreateNewGroupMutation = useMutation({
+    hook: useCreateNewGroupMutation,
+    loadingMessage: "Creating new group...",
+    onSuccess: null,
+  });
+
   const doneButtonClickHandler = () => {
     executeCreateNewGroupMutation({
       members: selectedMembers,
-      name: groupName.value,
+      name: newGroupName.value,
     });
     closeHandler();
   };
-  useEffect(() => {
-    getFriends({ keyword: searchPeople.value });
-  }, [searchPeople.value]);
+  // Create new group code end
+
   return (
     <Dialog open={open} onClose={closeHandler}>
-      <Stack p={"1rem"} width={350}>
-        <DialogTitle textAlign={"center"}>New Group</DialogTitle>
-        <TextField
-          value={searchPeople.value}
-          onChange={searchPeople.changeHandler}
-          placeholder="Search people here."
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
+      <Box p></Box>
+      <DialogTitle textAlign={"center"}>New Group</DialogTitle>
+      <TextField
+        value={newGroupName.value}
+        onChange={newGroupName.changeHandler}
+        error={newGroupName.error && newGroupName.error}
+        helperText={newGroupName.error}
+        label={"Group Name"}
+        FormHelperTextProps={{
+          color: "red",
+        }}
+        size="small"
+        sx={{ m: "1rem" }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search />
+            </InputAdornment>
+          ),
+        }}
+      />
+      <TextField
+        value={searchPeople.value}
+        onChange={searchPeople.changeHandler}
+        placeholder="Search people here"
+        size="small"
+        sx={{ m: "1rem" }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <DialogContent sx={{ width: "20rem", py: 0 }}>
+        <UserList
+          users={getFriendsResponse?.data?.friends}
+          handler={selectGroupMemberHandler}
+          selectedUsersList={selectedMembers}
         />
-        <br />
-        <TextField
-          value={groupName.value}
-          onChange={groupName.changeHandler}
-          placeholder="Name"
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Group />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Stack>
-          <UserList
-            users={getFriendsResponse?.data?.friends}
-            handler={selectGroupMemberHandler}
-            selectedUsersList={selectedMembers}
-          />
-        </Stack>{" "}
-        <DialogActions>
-          <Button variant="text" color="error" onClick={closeHandler}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={doneButtonClickHandler}
-          >
-            Done
-          </Button>
-        </DialogActions>
-      </Stack>
+      </DialogContent>
+      <Box p></Box>
+      <DialogActions>
+        <Button variant="text" color="error" onClick={closeHandler}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={doneButtonClickHandler}
+        >
+          Done
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

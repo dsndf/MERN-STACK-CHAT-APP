@@ -15,11 +15,12 @@ const UserList = ({
       })) ||
     [];
   return (
-    <List disablePadding sx={{ mt: 2 }}>
+    <List  disablePadding sx={{ mt: 2 ,width:"100%" }}>
       {users &&
         users.map((user) => {
           return (
             <UserListItem
+              
               key={user?._id}
               username={user?.name}
               avatar={user?.avatar}

@@ -22,7 +22,10 @@ export const sendFriendRequestValidator = () => {
   return body("userId").isMongoId().withMessage("Please provide valid userId");
 };
 export const replyFriendRequestValidator = () => {
-  return body("reply", "Please provide reply to the request").notEmpty();
+  return body("accepted")
+    .notEmpty()
+    .withMessage("Please provide accepted field")
+    .isBoolean();
 };
 
 export const validateAdminLogin = () => {

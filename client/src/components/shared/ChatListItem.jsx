@@ -1,7 +1,34 @@
-import { Avatar, AvatarGroup, Box, Card, CardHeader } from "@mui/material";
+import {
+  Avatar,
+  AvatarGroup,
+  Box,
+  Card,
+  CardHeader,
+  Stack,
+  Typography,
+} from "@mui/material";
 import React from "react";
 import { headerBg, mainBg, onlineColor, selected } from "../../constants/color";
 import { Handshake } from "@mui/icons-material";
+import AvatarCard from "./AvatarCard";
+const CountBox = ({ value }) => {
+  return (
+    <Box
+      display={"flex"}
+      alignItems={"center"}
+      justifyContent={"center"}
+      px={1}
+      py={0.25}
+      borderRadius={"100%"}
+      component={"small"}
+      color={"white"}
+      bgcolor={mainBg}
+    >
+      {" "}
+      {value}
+    </Box>
+  );
+};
 
 const ChatListItem = ({
   avatar,
@@ -13,33 +40,38 @@ const ChatListItem = ({
   newMessage,
   handleDeleteChatOpen,
   isSelected = false,
+  count = 0,
 }) => {
- 
   return (
     <Card variant="outlined" sx={{ bgcolor: isSelected && selected }}>
       <CardHeader
+        sx={{ ml: "1rem" }}
         title={name}
-        subheader="Last message."
-        titleTypographyProps={{ fontWeight: 600 }}
-        avatar={
-          <Box>
-            <AvatarGroup max={2}>
-              {avatar &&
-                avatar.map((av, i) => {
-                  return <Avatar key={av?.public_id} src={av?.url} />;
-                })}
-            </AvatarGroup>
-          </Box>
-        }
+        subheader={count ? count + " New message" : ""}
+        titleTypographyProps={{
+          fontWeight: 500,
+          color: isSelected ? "#fff" : "black",
+          ml: "1rem",
+          fontSize: "15px",
+        }}
+        subheaderTypographyProps={{ ml:2 ,color:"green"}}
+        avatar={<AvatarCard max={2} avatar={avatar} />}
         action={
           isOnline && (
-            <Box
-              mt={"1.2rem"}
-              width={"0.5rem"}
-              height={"0.5rem"}
-              borderRadius={"100%"}
-              bgcolor={onlineColor}
-            ></Box>
+            <Stack
+              flexDirection={"row"}
+              height={"100%"}
+              alignItems={"center"}
+              gap={"1rem"}
+              mt={2.5}
+            >
+              <Box
+                width={"0.5rem"}
+                height={"0.5rem"}
+                borderRadius={"100%"}
+                bgcolor={onlineColor}
+              ></Box>
+            </Stack>
           )
         }
       />
