@@ -4,13 +4,18 @@ import {
   Box,
   Card,
   CardHeader,
+  Menu,
+  MenuItem,
+  MenuList,
   Stack,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useRef } from "react";
 import { headerBg, mainBg, onlineColor, selected } from "../../constants/color";
 import { Handshake } from "@mui/icons-material";
 import AvatarCard from "./AvatarCard";
+import { StyledOnlineEffect } from "../style/StyleComponent";
+import { useDialog } from "../../hooks/useDialog";
 const CountBox = ({ value }) => {
   return (
     <Box
@@ -42,10 +47,28 @@ const ChatListItem = ({
   isSelected = false,
   count = 0,
 }) => {
+  const leaveGroupMenu = useDialog(false);
+  const deleteChat = useDialog(false);
+  const singleChatRef = useRef(null);
+  const groupChatRef = useRef(null);
+
   return (
-    <Card variant="outlined" sx={{ bgcolor: isSelected && selected }}>
+    <Card
+      variant="outlined"
+      component={"div"}
+      ref={groupChat ? groupChatRef : singleChatRef}
+      onContextMenu={
+        groupChat ? leaveGroupMenu.openHandler : deleteChat.openHandler
+      }
+      sx={{
+        borderTopLeftRadius: 0,
+        borderBottomLeftRadius: 0,
+        border: "none",
+        bgcolor: isSelected && selected,
+      }}
+    >
       <CardHeader
-        sx={{ ml: "1rem" }}
+        sx={{ ml: { xs: "0", md: "1rem" } }}
         title={name}
         subheader={count ? count + " New message" : ""}
         titleTypographyProps={{
@@ -54,8 +77,8 @@ const ChatListItem = ({
           ml: "1rem",
           fontSize: "15px",
         }}
-        subheaderTypographyProps={{ ml:2 ,color:"green"}}
-        avatar={<AvatarCard max={2} avatar={avatar} />}
+        subheaderTypographyProps={{ ml: 2, color: "green" }}
+        avatar={<AvatarCard avatar={avatar} />}
         action={
           isOnline && (
             <Stack
@@ -63,18 +86,51 @@ const ChatListItem = ({
               height={"100%"}
               alignItems={"center"}
               gap={"1rem"}
-              mt={2.5}
+              mt={"1.5rem"}
+              mr={1}
             >
               <Box
                 width={"0.5rem"}
                 height={"0.5rem"}
                 borderRadius={"100%"}
                 bgcolor={onlineColor}
-              ></Box>
+                position={"relative"}
+              >
+                <StyledOnlineEffect />
+              </Box>
             </Stack>
           )
         }
       />
+      <Menu
+        open={leaveGroupMenu.open}
+        onClose={leaveGroupMenu.closeHandler}
+        anchorEl={groupChatRef?.current}
+  
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+      >
+        
+        <MenuList disablePadding>
+          <MenuItem sx={{ fontSize: "14px" }}>Leave Group</MenuItem>
+        </MenuList>
+      </Menu>
+      <Menu
+        open={deleteChat.open}
+        onClose={deleteChat.closeHandler}
+        anchorEl={singleChatRef?.current}
+
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+      >
+        <MenuList disablePadding>
+          <MenuItem sx={{ fontSize: "14px",color:"red" }}>Delete</MenuItem>
+        </MenuList>
+      </Menu>
     </Card>
   );
 };

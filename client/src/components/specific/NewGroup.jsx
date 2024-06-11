@@ -8,10 +8,12 @@ import {
   Button,
   DialogContent,
   Box,
+  DialogContentText,
+  Typography,
 } from "@mui/material";
 import React, { Fragment, useEffect, useState } from "react";
 import UserList from "./UserList";
-import { Group, Search } from "@mui/icons-material";
+import { Diversity1, Group, Search } from "@mui/icons-material";
 import {
   useCreateNewGroupMutation,
   useLazyGetFriendsQuery,
@@ -22,6 +24,7 @@ import { useMutation } from "../../hooks/useMutation";
 import { getSocket } from "../../context/SocketApiContext";
 import toast from "react-hot-toast";
 import { validateNewGroupName } from "../../validators/validateNewGroupName";
+import EmptyData from "../shared/EmptyData";
 
 const NewGroup = ({ open, closeHandler }) => {
   const socket = getSocket();
@@ -29,6 +32,7 @@ const NewGroup = ({ open, closeHandler }) => {
   // Get friends code start
   const searchPeople = useInputValidation("");
   const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
+  const friends = getFriendsResponse?.data?.friends || [];
   useEffect(() => {
     getFriends({ keyword: searchPeople.value });
   }, [searchPeople.value]);
@@ -64,48 +68,58 @@ const NewGroup = ({ open, closeHandler }) => {
   return (
     <Dialog open={open} onClose={closeHandler}>
       <Box p></Box>
-      <DialogTitle textAlign={"center"}>New Group</DialogTitle>
-      <TextField
-        value={newGroupName.value}
-        onChange={newGroupName.changeHandler}
-        error={newGroupName.error && newGroupName.error}
-        helperText={newGroupName.error}
-        label={"Group Name"}
-        FormHelperTextProps={{
-          color: "red",
-        }}
-        size="small"
-        sx={{ m: "1rem" }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search />
-            </InputAdornment>
-          ),
-        }}
-      />
-      <TextField
-        value={searchPeople.value}
-        onChange={searchPeople.changeHandler}
-        placeholder="Search people here"
-        size="small"
-        sx={{ m: "1rem" }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search />
-            </InputAdornment>
-          ),
-        }}
-      />
 
-      <DialogContent sx={{ width: "20rem", py: 0 }}>
-        <UserList
-          users={getFriendsResponse?.data?.friends}
-          handler={selectGroupMemberHandler}
-          selectedUsersList={selectedMembers}
-        />
-      </DialogContent>
+      <DialogTitle textAlign={"center"}>New Group</DialogTitle>
+      {friends.length > 0 ? (
+        <Fragment>
+          <TextField
+            value={newGroupName.value}
+            onChange={newGroupName.changeHandler}
+            error={newGroupName.error && newGroupName.error}
+            helperText={newGroupName.error}
+            label={"Group Name"}
+            FormHelperTextProps={{
+              color: "red",
+            }}
+            size="small"
+            sx={{ m: "1rem" }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            value={searchPeople.value}
+            onChange={searchPeople.changeHandler}
+            placeholder="Search people here"
+            size="small"
+            sx={{ m: "1rem" }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <DialogContent sx={{ width: "20rem", py: 0 }}>
+            <UserList
+              users={friends}
+              handler={selectGroupMemberHandler}
+              selectedUsersList={selectedMembers}
+            />
+          </DialogContent>
+        </Fragment>
+      ) : (
+        <DialogContent>
+       <EmptyData icon={ <Diversity1 />} textContent={"No Friends Yet"} />
+        </DialogContent>
+      )}
+
       <Box p></Box>
       <DialogActions>
         <Button variant="text" color="error" onClick={closeHandler}>
@@ -115,6 +129,7 @@ const NewGroup = ({ open, closeHandler }) => {
           variant="contained"
           color="primary"
           onClick={doneButtonClickHandler}
+          disabled={friends.length === 0}
         >
           Done
         </Button>

@@ -3,7 +3,7 @@ import { Avatar, AvatarGroup, Stack, Typography } from "@mui/material";
 import randomUser from "../../assets/random/chatIOUser.jpg";
 import AvatarCard from "./AvatarCard";
 
-const GroupListItem = ({ group_name, avatar, totalMembers}) => {
+const GroupListItem = ({ group_name, avatar, totalMembers,isActive}) => {
   return (
     
     <Stack
@@ -13,17 +13,15 @@ const GroupListItem = ({ group_name, avatar, totalMembers}) => {
       alignItems={"center"}
       width={"100%"}
       p={"1rem"}
-      bgcolor={"white"}
-      boxShadow={"0 0 5px #a19f9f"}
-      borderRadius={"5px"}
+      bgcolor={!isActive?"beige":"black"}
       sx={{ cursor: "pointer" }}
     >
       <AvatarCard max={4} avatar={avatar} />
       <Stack>
-        <Typography variant="body2" fontWeight={"600"} color="initial">
+        <Typography variant="body2" fontWeight={"600"} color={isActive?"white":"initial"}>
           {group_name}
         </Typography>
-        <Typography variant="caption" color="initial">
+        <Typography variant="caption" color={isActive?"white":"initial"}>
           {totalMembers} members
         </Typography>
       </Stack>

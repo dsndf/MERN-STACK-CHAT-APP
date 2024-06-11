@@ -20,13 +20,13 @@ import {
 } from "../../redux/api/query";
 import { useInputValidation } from "6pp";
 import { useMutation } from "../../hooks/useMutation";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 
-const AddMember = ({ open, closeHandler }) => {
+import { useNavigate, useSearchParams } from "react-router-dom";
+
+const AddMember = ({ open, closeHandler, friendsToAvoid = [] }) => {
   const navigate = useNavigate();
   const [selectedMembers, setSeletedMembers] = useState([]);
-  const { selectedGroup } = useSelector((state) => state["misc"]);
+  const chatId = useSearchParams()[0].get("group");
   const addGroupMemberHandler = (id) => {
     setSeletedMembers((prev) => {
       if (prev.includes(id)) {
@@ -46,14 +46,14 @@ const AddMember = ({ open, closeHandler }) => {
   // Add members code start
   const executeAddMembersMutation = useMutation({
     hook: useAddMembersMutation,
+    loadingMessage:"Saving changes..."
   });
   const executeAddMemberMutationHandler = async () => {
     if (!selectedMembers.length) return;
     await executeAddMembersMutation({
       members: selectedMembers,
-      chatId: selectedGroup?._id,
+      chatId: chatId,
     });
-    navigate("/");
   };
   // Add members code end
 
@@ -82,8 +82,7 @@ const AddMember = ({ open, closeHandler }) => {
         </DialogContentText>
         <UserList
           users={getFriendsResponse.data?.friends?.filter(
-            (friend) =>
-              !selectedGroup?.members?.some((m) => m._id === friend?._id)
+            (friend) => !friendsToAvoid.includes(friend?._id)
           )}
           handler={addGroupMemberHandler}
           selectedUsersList={selectedMembers}

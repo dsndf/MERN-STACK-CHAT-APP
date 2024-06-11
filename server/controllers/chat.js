@@ -73,9 +73,6 @@ export const getMyChats = catchAsyncError(async (req, res, next) => {
       }),
     };
   });
-  // req.io
-  //   .to(usersSocket[String(req.user._id)])
-  //   .emit("Wish", "Welcome to ChatIO");
   res.json({ success: true, chats, onlineUsers: Array.from(onlineUsers) });
 });
 
@@ -86,7 +83,7 @@ export const getMyGroups = catchAsyncError(async (req, res, next) => {
     isGroup: true,
     creator: user._id,
   })
-    .populate("members", "avatar")
+    .populate("members", "avatar name")
     .lean();
   groups = groups.map((group) => {
     return {
@@ -127,15 +124,14 @@ export const addMembers = catchAsyncError(async (req, res, next) => {
   group.members.push(...members);
   group.save();
 
-  emitEvent(req, ALERT, {
-    users: getOtherMembers(members, req.user._id),
+  emitEvent(req, REFETCH_CHATS, {
+    users: members,
     message: `You are added into ${group.name}`,
   });
-  emitEvent(req, REFETCH_CHATS, { users: members });
 
   res.status(200).json({
     success: true,
-    message: numofMembers > 1 ? "members added" : "member added",
+    message: numofMembers > 1 ? "Members added" : "Member added",
   });
 });
 
@@ -163,15 +159,11 @@ export const removeMember = catchAsyncError(async (req, res, next) => {
   const [{ name }] = await Promise.all([User.findById(member), group.save()]);
   const message = `${name} has been removed from ${group.name}`;
 
-  emitEvent(
-    req,
-    ALERT,
-    {
-      user: member,
-    },
-    `You are removed from ${group.name}`
-  );
-  emitEvent(req, REFETCH_CHATS, { user: member });
+  emitEvent(req, ALERT, {
+    users: [member],
+    message: `You are removed from ${group.name}`,
+  });
+  emitEvent(req, REFETCH_CHATS, { users: [member] });
 
   res.json({ success: true, message });
 });
@@ -213,11 +205,12 @@ export const deleteChat = catchAsyncError(async (req, res, next) => {
 
   await Chat.findByIdAndDelete(chat_id);
 
-  emitEvent(req, ALERT, `${req.user.name} has been deleted the chat.`, {
+  emitEvent(req, ALERT, {
     users: otherMember,
+    message: `${req.user.name} has been deleted the chat.`,
   });
   emitEvent(req, REFETCH_CHATS, {
-    users: [otherMember, req.user._id],
+    users: [...otherMember, req.user._id],
   });
 
   res.json({ success: true, message: "Leaved Successfully" });
@@ -286,8 +279,9 @@ export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
   const otherMembers = getOtherMembers(chat.members, req.user._id);
   const groupName = chat.name;
   await Chat.findOneAndDelete({ _id: chat_id });
-  emitEvent(req, ALERT, `${groupName} has been deleted`, {
+  emitEvent(req, ALERT, {
     users: otherMembers,
+    message: `${groupName} has been deleted`,
   });
   emitEvent(req, REFETCH_CHATS, {
     users: [...otherMembers, req.user._id],

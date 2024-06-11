@@ -16,6 +16,7 @@ import {
   resetNotificationCount,
   setIsNotified,
 } from "../../redux/slices/userNotificationSlice";
+import EmptyData from "../shared/EmptyData";
 
 const NotificationCard = ({ reqId, sender, handler }) => {
   return (
@@ -101,7 +102,7 @@ const Notifications = ({ open, closeHandler }) => {
       aria-labelledby={"notification-dialog"}
     >
       <DialogTitle alignItems={"center"}>Notifications</DialogTitle>
-      <DialogContent sx={{ width: "25rem" }}>
+      <DialogContent>
         {notifications.data &&
           notifications.data?.newNotifications?.map(({ sender, _id }) => {
             return (
@@ -114,14 +115,10 @@ const Notifications = ({ open, closeHandler }) => {
             );
           })}
         {!notifications.data?.newNotifications.length && (
-          <Typography
-            fontSize={"large"}
-            color={"GrayText"}
-            display={"flex"}
-            alignItems={"center"}
-          >
-            <NotificationsIcon /> No Notifications Yet
-          </Typography>
+          <EmptyData
+            textContent={"No Notifications Yet"}
+            icon={<NotificationsIcon />}
+          />
         )}
       </DialogContent>
 

@@ -13,22 +13,23 @@ const AvatarCard = ({ avatar = [], max = 4 }) => {
         }}
       >
         <Box width={"5rem"} height={"3rem"}>
-          {avatar.map(({ public_id, url }, index) => (
-            <Avatar
-              key={Math.random() * 100}
-              src={url}
-              alt={`Avatar ${index}`}
-              sx={{
-                width: "3rem",
-                height: "3rem",
-                position: "absolute",
-                left: {
-                  xs: `${0.5 + index}rem`,
-                  sm: `${index}rem`,
-                },
-              }}
-            />
-          ))}
+          {avatar.map(({ public_id, url }, index) =>
+            index < max ? (
+              <Avatar
+                key={Math.random() * 100}
+                src={url}
+                alt={`Avatar ${index}`}
+                sx={{
+                  width: "3rem",
+                  height: "3rem",
+                  position: "absolute",
+                  left: {
+                    sm: `${index/1.2}rem`,
+                  },
+                }}
+              />
+            ) : null
+          )}
         </Box>
       </AvatarGroup>
     </Stack>

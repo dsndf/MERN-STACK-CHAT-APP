@@ -36,10 +36,11 @@ import {
   useDeleteGroupMutation,
   useEditGroupNameMutation,
   useGetMyGroupsQuery,
+  useLazyGetChatDetailsQuery,
+  useRemoveMemberMutation,
 } from "../redux/api/query.js";
 import { useDispatch, useSelector } from "react-redux";
 import UserList from "../components/specific/UserList.jsx";
-import { setSelectedGroup } from "../redux/slices/miscSlice.js";
 import { useMutation } from "../hooks/useMutation.js";
 import FindFreindsSkeleton from "../components/skeleton/FindFreindsSkeleton.jsx";
 
@@ -55,29 +56,24 @@ const Groups = () => {
   const navigate = useNavigate();
   const deleteGroupDialog = useDialog({});
   const addGroupMemberDialog = useDialog({});
-
-  const [removedMembers, setRemovedMembers] = useState([]);
   const dispatch = useDispatch();
+  const groupId = useSearchParams()[0].get("group");
+  const { user } = useSelector((state) => state["auth"]);
 
   const navigateBack = () => {
     navigate("/");
   };
 
-  const removeMemberHandler = (id) => {
-    console.log({ id });
-    setRemovedMembers((prev) =>
-      !prev.includes(id)
-        ? [...prev, id]
-        : prev.filter((member) => member !== id)
-    );
-  };
+  const [getChatDetails, getChatDetailsResults] = useLazyGetChatDetailsQuery();
+  const groupDetails = getChatDetailsResults.data?.chat;
 
   const executeDeleteGroupMutation = useMutation({
     hook: useDeleteGroupMutation,
   });
   const deleteGroupHandler = async () => {
-    await executeDeleteGroupMutation({ chatId: selectedGroup?._id });
-    dispatch(setSelectedGroup({ group: {}, isSelected: false }));
+    await executeDeleteGroupMutation({ chatId: groupDetails?._id });
+    deleteGroupDialog.closeHandler();
+    navigate("/");
   };
   const addGroupMemberSaveChangesHandler = () => {
     addGroupMemberDialog.closeHandler();
@@ -87,34 +83,18 @@ const Groups = () => {
 
   // GROUP NAME EDIT CODE STARTS
 
-  const groupName = useSearchParams()[0].get("group");
   const [newGroupName, setNewGroupName] = useState("");
-  const { isGroupSelected, selectedGroup } = useSelector(
-    (state) => state["misc"]
-  );
+
   const [isGroupNameEdit, setIsGroupNameEdit] = useState(false);
   const groupNameEditHandler = () => {
     setIsGroupNameEdit(true);
+    setNewGroupName(groupDetails?.name);
   };
   const cancelToEditGroupName = () => {
     setIsGroupNameEdit(false);
-    setNewGroupName(groupName);
   };
 
   const newGroupNameChangeHandler = (e) => setNewGroupName(e.target.value);
-
-  useEffect(() => {
-    if (groupName) {
-      setNewGroupName(groupName);
-      setIsGroupNameEdit(false);
-    }
-  }, [groupName]);
-
-  useEffect(() => {
-    return () => {
-      dispatch(setSelectedGroup({ group: {}, isSelected: false }));
-    };
-  }, []);
 
   const executeEditGroupNameMutation = useMutation({
     hook: useEditGroupNameMutation,
@@ -124,12 +104,20 @@ const Groups = () => {
   const updateGroupName = async () => {
     await executeEditGroupNameMutation({
       name: newGroupName,
-      chatId: selectedGroup._id,
+      chatId: groupDetails?._id,
     });
     navigate("/");
   };
   // GROUP NAME EDIT CODE END
 
+  //Remove Member code start
+  const excecuteRemoveMemberMutation = useMutation({
+    hook: useRemoveMemberMutation,
+  });
+  const removeMemberHandler = (member) => {
+    excecuteRemoveMemberMutation({ chatId: groupId, member });
+  };
+  //Remove Member code end
   const GroupName = (
     <>
       <Box component={"div"} textAlign={"center"}>
@@ -147,7 +135,7 @@ const Groups = () => {
             />
           ) : (
             <Typography variant="h4" color="initial">
-              {selectedGroup?.name || "Group XYZ"}
+              {groupDetails?.name || "Group XYZ"}
             </Typography>
           )}
           {!isGroupNameEdit && (
@@ -169,7 +157,7 @@ const Groups = () => {
           {isGroupNameEdit && (
             <IconButton
               sx={{ height: "fit-content" }}
-              onClick={groupNameEditHandler}
+              onClick={cancelToEditGroupName}
             >
               <Cancel />
             </IconButton>
@@ -200,8 +188,13 @@ const Groups = () => {
         >
           {users && (
             <UserList
-              users={users}
-              selectedUsersList={users.map(({ _id }) => _id)}
+              users={groupDetails?.members?.filter(
+                ({ _id }) => user._id !== _id
+              )}
+              handler={removeMemberHandler}
+              selectedUsersList={groupDetails?.members?.map(({ _id }) =>
+                user._id !== _id ? _id : null
+              )}
             />
           )}
         </Stack>
@@ -224,16 +217,24 @@ const Groups = () => {
       </Box>
     </Stack>
   );
-
+  useEffect(() => {
+    if (groupId) {
+      getChatDetails({ chatId: groupId, populate: true });
+    }
+    return () => {
+      setIsGroupNameEdit(false);
+      setNewGroupName("");
+    };
+  }, [groupId]);
   return (
     <Grid m={0} container height={"100vh"}>
       <Grid
         item
         display={{ xs: "none", md: "block" }}
         md={4}
-        bgcolor={lightGrayBg}
+        borderRight={"1px solid lightgray"}
       >
-        <GroupList groupList={myGroups.data?.groups} />
+        <GroupList groupList={myGroups.data?.groups} activeId={groupId} />
       </Grid>
       <Grid item xs={12} md={8}>
         <Box
@@ -263,7 +264,7 @@ const Groups = () => {
           </IconButton>
         </Box>
 
-        {isGroupSelected ? (
+        {groupDetails ? (
           <Fragment>
             {GroupName}
             <Typography
@@ -297,6 +298,7 @@ const Groups = () => {
                   openHanlder={addGroupMemberDialog.openHandler}
                   closeHandler={addGroupMemberDialog.closeHandler}
                   saveChangesAction={addGroupMemberSaveChangesHandler}
+                  friendsToAvoid={groupDetails?.members.map(({ _id }) => _id)}
                 />
               )}
             </Suspense>
@@ -308,7 +310,7 @@ const Groups = () => {
         )}
       </Grid>
       <Drawer open={drawer.open} onClose={drawer.closeHandler}>
-        <GroupList groupList={myGroups.data?.groups} />
+        <GroupList groupList={myGroups.data?.groups} activeId={groupId} />
       </Drawer>
     </Grid>
   );

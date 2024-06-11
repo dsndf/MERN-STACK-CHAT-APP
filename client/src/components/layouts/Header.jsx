@@ -135,7 +135,7 @@ const Header = ({ drawerOpenHandler }) => {
                 },
               }}
             >
-              <Telegram /> DooChat
+              <Telegram /> Chattu
             </IconButton>
           </StyledLogoBox>
           <StyledIconsBox>

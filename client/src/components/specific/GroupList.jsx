@@ -1,10 +1,9 @@
 import { Stack } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import GroupListItem from "../shared/GroupListItem";
 import { useDispatch } from "react-redux";
-import { setSelectedGroup } from "../../redux/slices/miscSlice";
 import { useNavigate } from "react-router-dom";
-
+import { motion } from "framer-motion";
 const GroupList = ({
   groupList = [
     { _id: "nasda" },
@@ -12,32 +11,30 @@ const GroupList = ({
     { _id: "Dsadnbsas" },
     { _id: "Dsadnbssa" },
   ],
-  chatId,
+  activeId,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const groupClickHandler = (groupData) => {
-    dispatch(setSelectedGroup({ group: groupData, isSelected: true }));
-  };
-
   return (
-    <Stack
+    <Stack 
       alignItems={"center"}
-      spacing={2}
-      p={"2rem"}
       height={"100vh"}
       sx={{ overflow: "auto" }}
       width={"100%"}
-      border={"1px solid "}
     >
       {groupList &&
-        groupList.map((group) => (
-          <div
+        groupList.map((group,i) => (
+          <motion.div
+            initial={{ y: "-10%", opacity: 0 }}
+            whileInView={{
+              y: "0%",
+              opacity: 1,
+              transition: { delay: (i + 1) / 10 },
+            }}
             style={{ width: "100%" }}
             onClick={() => {
-              navigate("/groups?group=" + group?.name);
-              groupClickHandler(group);
+              navigate("/groups?group=" + group?._id);
             }}
           >
             <GroupListItem
@@ -45,8 +42,9 @@ const GroupList = ({
               totalMembers={group?.totalMembers}
               group_name={group?.name}
               avatar={group?.avatar}
+              isActive={group?._id === activeId}
             />
-          </div>
+          </motion.div>
         ))}
     </Stack>
   );

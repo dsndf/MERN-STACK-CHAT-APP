@@ -65,7 +65,7 @@ const AppLayout = () => (WrappedComponent) => {
       },
       [id]
     );
-    const alertEventHandler = useCallback((message) => {
+    const alertEventHandler = useCallback(({ message }) => {
       toast.success(message);
     }, []);
 
@@ -108,7 +108,7 @@ const AppLayout = () => (WrappedComponent) => {
     return (
       <>
         <Header drawerOpenHandler={openHandler} />
-        <Stack direction={"row"} spacing={1}>
+        <Stack direction={"row"} spacing={0.5}>
           <Drawer sx={{ width: "40%" }} open={open} onClose={closeHandler}>
             <ChatList
               activeChatId={id}

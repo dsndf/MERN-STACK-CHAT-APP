@@ -200,6 +200,7 @@ const Chat = ({ chatId: currentChatId }) => {
           height={"100%"}
           sx={{ background: `url(${chatWallpaper})` }}
           position={"relative"}
+
         >
           <Stack
             component={"div"}
@@ -231,7 +232,6 @@ const Chat = ({ chatId: currentChatId }) => {
             {isTyping && <Typing />}
             <Box
               visibility={"hidden"}
-              border={"2px solid red"}
               ref={containerBottomRef}
             ></Box>
           </Stack>
@@ -277,7 +277,7 @@ const Chat = ({ chatId: currentChatId }) => {
                   p: "0.7rem",
                   right: 0,
                   bottom: 0,
-                }}
+                  top:0                }}
               >
                 <Send sx={{ rotate: "-25deg" }} />
               </IconButton>

@@ -1,10 +1,15 @@
 import { Avatar, Box, Stack, Typography } from "@mui/material";
-import { AlternateEmail, Email, Person } from "@mui/icons-material";
+import { AccountCircle, AlternateEmail, Email, Fingerprint, Person } from "@mui/icons-material";
 import randomUser from "../../assets/random/chatIOUser.jpg";
 import { profileContentColor, textColorInDark } from "../../constants/color";
 import { useSelector } from "react-redux";
-
-const ProfileCard = ({ title, content, icon }) => {
+import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
+const ProfileCard = ({ title, content, Icon }) => {
+  const iconProps = {
+    sx: {
+      color: "beige",
+    },
+  };
   return (
     <Stack
       width={"100%"}
@@ -14,17 +19,18 @@ const ProfileCard = ({ title, content, icon }) => {
       justifyContent={"center"}
     >
       {" "}
-      {icon}
+      <Icon {...iconProps} />
       <Stack spacing={1} alignItems={"center"}>
         <Typography
           variant="p"
           sx={{ color: textColorInDark }}
           component={"div"}
-          display={"flex"}
-          alignItems={"center"}
           gap={2}
+          fontWeight={400}
+          fontSize={"large"}
+          textAlign={"center"}
         >
-          {content}
+          {content.slice(0,20)}
         </Typography>
         <Typography
           variant="p"
@@ -58,11 +64,23 @@ const Profile = () => {
           }}
           src={user?.avatar?.url}
         />
-        <Typography variant="h6" color={"white"}>
-          {"Gaurav Jain"}
-        </Typography>
-        {isAuth && "Online"}
       </Stack>
+      <ProfileCard
+        Icon={Fingerprint}
+        title={"Bio"}
+        content={user?.bio}
+      />
+      <ProfileCard
+        Icon={SentimentSatisfiedAltIcon}
+        title={"Name"}
+        content={user?.name}
+      />
+      <ProfileCard
+        Icon={AccountCircle}
+        title={"Username"}
+        content={user?.username}
+      />
+   
     </Stack>
   );
 };

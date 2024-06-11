@@ -1,10 +1,20 @@
-import { Avatar, Box, Stack, Typography } from "@mui/material";
-import React from "react";
+import {
+  Avatar,
+  Box,
+  Menu,
+  MenuItem,
+  MenuList,
+  Stack,
+  Typography,
+} from "@mui/material";
+import React, { useRef } from "react";
 import moment from "moment";
 import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector";
 import RenderAttachment from "./RenderAttachment";
 import { fileFormat, transformImage } from "../../lib/features";
 import { mainBg } from "../../constants/color";
+import { motion } from "framer-motion";
+import { useDialog } from "../../hooks/useDialog";
 
 const MessageComponent = ({
   sender,
@@ -16,6 +26,8 @@ const MessageComponent = ({
     state: { user },
   } = useDispatchAndSelector("auth");
   const isMe = sender?._id === user._id;
+  const messageBoxRef = useRef(null);
+  const deleteMenu = useDialog(false);
 
   return (
     <>
@@ -26,7 +38,19 @@ const MessageComponent = ({
           p={"10px"}
           sx={{ bgcolor: "white" }}
           borderRadius={"5px"}
+          component={"div"}
+          ref={messageBoxRef}
+          onContextMenu={deleteMenu.openHandler}
         >
+          <Menu
+            open={deleteMenu.open}
+            onClose={deleteMenu.closeHandler}
+            anchorEl={messageBoxRef?.current}
+          >
+            <MenuList disablePadding>
+              <MenuItem sx={{ fontSize: "15px",color:"red" }}>Delete</MenuItem>
+            </MenuList>
+          </Menu>
           <Stack
             mb={1}
             flexDirection={"row"}

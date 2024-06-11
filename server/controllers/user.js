@@ -64,6 +64,9 @@ export const searchUsers = catchAsyncError(async (req, res, next) => {
         $and: [
           { name: { $regex: keyword, $options: "i" } },
           { _id: { $nin: myFriends } },
+          {
+            _id: { $ne: me },
+          },
         ],
       },
     },
@@ -105,7 +108,7 @@ export const searchUsers = catchAsyncError(async (req, res, next) => {
     return {
       name: user.name,
       _id: user._id,
-      avatar: user.avatar.url,
+      avatar: user.avatar,
       sendStatus: user?.requestRecievedUsers?.length > 0 ? true : false,
     };
   });

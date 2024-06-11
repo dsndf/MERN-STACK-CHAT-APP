@@ -8,7 +8,7 @@ import React, { useRef } from "react";
 
 const AttachFileMenuItem = ({ icon, tooltipTitle, onClick }) => {
   return (
-    <Tooltip title={tooltipTitle}>
+    <Tooltip title={tooltipTitle} placement="right">
       <IconButton onClick={onClick}>{icon}</IconButton>
     </Tooltip>
   );
