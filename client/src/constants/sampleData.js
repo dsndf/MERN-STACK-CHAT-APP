@@ -1,10 +1,10 @@
-import randomUserAvatar from '../assets/random/chatIOUser.jpg';
+
 
 export const users = [
     {
         name: "Neel Jain",
         avatar: {
-            url: randomUserAvatar
+            url: ""
         },
         _id: "101"
     },
@@ -19,7 +19,7 @@ export const notifications = [
     {
         sender: {
             name: "Dhruv",
-            avatar: randomUserAvatar
+            avatar: ""
         }
         ,
         _id: "dmpwdkw"
@@ -27,7 +27,7 @@ export const notifications = [
     {
         sender: {
             name: "Rahul",
-            avatar: randomUserAvatar
+            avatar: ""
         }
         ,
         _id: "dmkdnfsd"
@@ -49,7 +49,7 @@ export const sampleMessages = [
         sender: {
             _id: "user_id1",
             name: "Dhruv",
-            avatar: randomUserAvatar
+            avatar: ""
         },
         chatId: "chatId1",
         createdAt: '2024-01-23'
@@ -66,7 +66,7 @@ export const sampleMessages = [
         sender: {
             _id: "user_id1",
             name: "Dhruv",
-            avatar: randomUserAvatar
+            avatar: ""
         },
         chatId: "chatId1",
         createdAt: '2024-01-23'
@@ -77,7 +77,7 @@ export const userTableData = [
     {
         _id: 101,
         name: "Gaurav Jain",
-        avatar: randomUserAvatar,
+        avatar: "",
         groups: 22,
         friends: 11
     }
@@ -85,7 +85,7 @@ export const userTableData = [
     {
         _id: 1021,
         name: "Gaurav Jain",
-        avatar: randomUserAvatar,
+        avatar: "",
         groups: 22,
         friends: 11
     }
@@ -93,7 +93,7 @@ export const userTableData = [
     {
         _id: 10321,
         name: "Gaurav Jain",
-        avatar: randomUserAvatar,
+        avatar: "",
         groups: 22,
         friends: 11
     }
@@ -101,28 +101,28 @@ export const userTableData = [
     {
         _id: 102,
         name: "Kunal Jain",
-        avatar: randomUserAvatar,
+        avatar: "",
         groups: 22,
         friends: 4
     },
     {
         _id: 104,
         name: "Kunal Jain",
-        avatar: randomUserAvatar,
+        avatar: "",
         groups: 22,
         friends: 4
     },
     {
         _id: 103,
         name: "Kunal Jain",
-        avatar: randomUserAvatar,
+        avatar: "",
         groups: 22,
         friends: 4
     },
     {
         _id: 100,
         name: "Kunal Jain",
-        avatar: randomUserAvatar,
+        avatar: "",
         groups: 22,
         friends: 4
     },
@@ -132,14 +132,14 @@ export const userTableData = [
 export const chats = [
 {
     name:"snd dsdr rfj",
-    avatar:[randomUserAvatar,randomUserAvatar,randomUserAvatar],
+    avatar:["","",""],
     _id:1,
     members:[1,2],
     totalMembers:2,
     totalMessages:20,
     creator:{
         name:"John Doe",
-        avatar:randomUserAvatar
+        avatar:""
     }
 }
 ]

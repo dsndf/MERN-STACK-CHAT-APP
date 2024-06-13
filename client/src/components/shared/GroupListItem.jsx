@@ -1,6 +1,6 @@
 import React from "react";
 import { Avatar, AvatarGroup, Stack, Typography } from "@mui/material";
-import randomUser from "../../assets/random/chatIOUser.jpg";
+
 import AvatarCard from "./AvatarCard";
 
 const GroupListItem = ({ group_name, avatar, totalMembers,isActive}) => {

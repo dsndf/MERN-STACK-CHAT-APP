@@ -11,7 +11,13 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useRef } from "react";
-import { headerBg, mainBg, onlineColor, selected } from "../../constants/color";
+import {
+  headerBg,
+  lightGrayBg,
+  mainBg,
+  onlineColor,
+  selected,
+} from "../../constants/color";
 import { Handshake } from "@mui/icons-material";
 import AvatarCard from "./AvatarCard";
 import { StyledOnlineEffect } from "../style/StyleComponent";
@@ -65,6 +71,10 @@ const ChatListItem = ({
         borderBottomLeftRadius: 0,
         border: "none",
         bgcolor: isSelected && selected,
+        "&:hover": {
+          bgcolor: !isSelected && "beige",
+          transition: "all 0.5s",
+        },
       }}
     >
       <CardHeader
@@ -78,7 +88,7 @@ const ChatListItem = ({
           fontSize: "15px",
         }}
         subheaderTypographyProps={{ ml: 2, color: "green" }}
-        avatar={<AvatarCard avatar={avatar} />}
+        avatar={<AvatarCard avatar={avatar} max={4} />}
         action={
           isOnline && (
             <Stack
@@ -106,13 +116,11 @@ const ChatListItem = ({
         open={leaveGroupMenu.open}
         onClose={leaveGroupMenu.closeHandler}
         anchorEl={groupChatRef?.current}
-  
         transformOrigin={{
           vertical: "bottom",
           horizontal: "right",
         }}
       >
-        
         <MenuList disablePadding>
           <MenuItem sx={{ fontSize: "14px" }}>Leave Group</MenuItem>
         </MenuList>
@@ -121,14 +129,13 @@ const ChatListItem = ({
         open={deleteChat.open}
         onClose={deleteChat.closeHandler}
         anchorEl={singleChatRef?.current}
-
         transformOrigin={{
           vertical: "bottom",
           horizontal: "right",
         }}
       >
         <MenuList disablePadding>
-          <MenuItem sx={{ fontSize: "14px",color:"red" }}>Delete</MenuItem>
+          <MenuItem sx={{ fontSize: "14px", color: "red" }}>Delete</MenuItem>
         </MenuList>
       </Menu>
     </Card>

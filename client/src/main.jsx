@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <HelmetProvider>
       <CssBaseLine />
       <ThemeProvider theme={theme}>
-        <div onContextMenu={(e)=>e.preventDefault()} >
+        <div  >
           <App />
         </div>
       </ThemeProvider>

@@ -10,3 +10,5 @@ export const TYPING_STOPPED = "TYPING STOPPED";
 export const NOTIFICATION_ALERT = "NOTIFICATION ALERT";
 export const NEW_MESSAGE_COUNT_ALERT = "NEW_MESSAGE_COUNT_ALERT";
 export const ALERT = "ALERT";
+export const REMOVE_MEMBER_ALERT = "remove-member-alert";
+export const DELETE_GROUP_ALERT = "delete-group-alert";

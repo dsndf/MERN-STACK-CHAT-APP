@@ -171,7 +171,7 @@ const Header = ({ drawerOpenHandler }) => {
             />
           </StyledIconsBox>
         </StyledToolBar>
-        {loading && <LinearProgress color="secondary" />}
+        {loading && <LinearProgress sx={{width:"100%"}} color="secondary" />}
       </StyledAppBar>
 
       {isSearch && (

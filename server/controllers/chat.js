@@ -4,10 +4,11 @@ import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { emitEvent } from "../events/emitEvent.js";
 import {
   ALERT,
+  DELETE_GROUP_ALERT,
   MESSAGE_ALERT,
-  MESSAGE_SENT,
   NEW_MESSAGE_COUNT_ALERT,
   REFETCH_CHATS,
+  REMOVE_MEMBER_ALERT,
 } from "../events/serverEvents.js";
 import {
   cloudinaryInstance,
@@ -20,6 +21,7 @@ import { Message } from "../models/message.js";
 import { createAttachments } from "../seeders/messages.js";
 import { ErrorHandler } from "../utils/errorHandler.js";
 import { onlineUsers } from "../server.js";
+import { users } from "../../client/src/constants/sampleData.js";
 
 export const createNewGroup = catchAsyncError(async (req, res, next) => {
   let { name, members } = req.body;
@@ -32,14 +34,11 @@ export const createNewGroup = catchAsyncError(async (req, res, next) => {
     members,
     creator: req.user._id,
   });
-
-  emitEvent(
-    req,
-    REFETCH_CHATS,
-    { users: members },
-    `${creatorName} created ${newGroup.name}`
-  );
-
+  emitEvent(req, REFETCH_CHATS, { users: members });
+  emitEvent(req, ALERT, {
+    users: getOtherMembers(members, req.user._id),
+    message: creatorName + " added you in " + name,
+  });
   res.status(201).json({
     success: true,
     message: "Group created successfully.",
@@ -162,6 +161,8 @@ export const removeMember = catchAsyncError(async (req, res, next) => {
   emitEvent(req, ALERT, {
     users: [member],
     message: `You are removed from ${group.name}`,
+    chatId: chat_id,
+    type: REMOVE_MEMBER_ALERT,
   });
   emitEvent(req, REFETCH_CHATS, { users: [member] });
 
@@ -282,6 +283,8 @@ export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
   emitEvent(req, ALERT, {
     users: otherMembers,
     message: `${groupName} has been deleted`,
+    chatId: chat_id,
+    type: DELETE_GROUP_ALERT,
   });
   emitEvent(req, REFETCH_CHATS, {
     users: [...otherMembers, req.user._id],
@@ -299,7 +302,7 @@ export const getChatDetails = catchAsyncError(async (req, res, next) => {
 
   if (!chat) return next(new ErrorHandler("Chat not found", 404));
   if (!members.includes(String(req.user._id))) {
-    return next(new ErrorHandler("You are not the member of this chat.", 403));
+    return next(new ErrorHandler("You don't have access to this chat.", 401));
   }
 
   if (populate === "true") {
@@ -338,7 +341,7 @@ export const getMessages = catchAsyncError(async (req, res, next) => {
   const skip = (page - 1) * limit;
   const chat = await Chat.findById(chat_id);
   if (!chat.members.includes(String(me))) {
-    return next(new ErrorHandler("You don't have access to this chat", 403));
+    return next(new ErrorHandler("You don't have access to this chat", 401));
   }
 
   const dbQuery = Message.find({ chat: chat_id }).sort({ createdAt: -1 });

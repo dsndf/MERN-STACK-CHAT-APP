@@ -1,6 +1,5 @@
 import { Avatar, Box, Stack, Typography } from "@mui/material";
 import { AccountCircle, AlternateEmail, Email, Fingerprint, Person } from "@mui/icons-material";
-import randomUser from "../../assets/random/chatIOUser.jpg";
 import { profileContentColor, textColorInDark } from "../../constants/color";
 import { useSelector } from "react-redux";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";

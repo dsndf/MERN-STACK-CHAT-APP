@@ -7,7 +7,7 @@ import Header from "./Header";
 import { Drawer, Stack } from "@mui/material";
 import Profile from "../specific/Profile";
 import ChatList from "../specific/ChatList";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useGetMyChatsQuery } from "../../redux/api/query";
 import { useDialog } from "../../hooks/useDialog";
 import { useAddEvents } from "../../hooks/useAddEvents";
@@ -15,10 +15,12 @@ import toast from "react-hot-toast";
 import { useCallback, useEffect } from "react";
 import {
   ALERT,
+  DELETE_GROUP_ALERT,
   NEW_MESSAGE_COUNT_ALERT,
   OFFLINE,
   ONLINE,
   REFETCH_CHATS,
+  REMOVE_MEMBER_ALERT,
 } from "../../events/clientEvents";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -29,6 +31,7 @@ import {
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const wrappedComponentprops = { ...props, chatId: id };
     const { data, error, refetch, isLoading, status, isSuccess, requestId } =
       useGetMyChatsQuery(null, { refetchOnMountOrArgChange: true });
@@ -59,15 +62,26 @@ const AppLayout = () => (WrappedComponent) => {
     const newMessageCountAlertEventHandler = useCallback(
       (data) => {
         const { chatId } = data;
-        alert(chatId);
         if (id && id === chatId) return;
         dispatch(setNewMessageCount(chatId));
       },
       [id]
     );
-    const alertEventHandler = useCallback(({ message }) => {
-      toast.success(message);
-    }, []);
+    const alertEventHandler = useCallback(
+      ({ message, chatId, type }) => {
+        toast.success(message);
+        if (type === REMOVE_MEMBER_ALERT) {
+          if (chatId === id) {
+            navigate("/");
+          }
+        } else if (type === DELETE_GROUP_ALERT) {
+          if (chatId === id) {
+            navigate("/");
+          }
+        }
+      },
+      [id]
+    );
 
     useAddEvents(
       [
