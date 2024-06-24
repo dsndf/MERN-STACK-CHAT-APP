@@ -22,6 +22,7 @@ import { validatePassword } from "../../validators/validatePassword";
 import { validateUsername } from "../../validators/validateUsername";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { mainBg } from "../../constants/color";
 
 const Login = () => {
   const [registerToggle, setRegisterToggle] = useState(false);
@@ -61,6 +62,7 @@ const Login = () => {
     formData.append("avatar", avatar);
     dispatch(registerUser(formData));
   };
+  
   return (
     <div
       style={{
@@ -68,13 +70,12 @@ const Login = () => {
         justifyContent: "center",
         alignItems: "center",
         height: "100vh",
-        backgroundColor: "#FF9A8B",
+        backgroundColor: mainBg,
         overflow:"auto",
-        backgroundImage:
-          "linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%",
+       
       }}
     >
-      <Title title={"Login"} description={"ChatIO login"} />
+      <Title title={"User Auth"} description={"login"} />
       <Container component={"main"} maxWidth={"xs"}>
         <Paper
           elevation={3}
@@ -104,6 +105,7 @@ const Login = () => {
                   margin="normal"
                   value={loginUsername.value}
                   onChange={loginUsername.changeHandler}
+                  required
                 />
                 <TextField
                   type="password"
@@ -113,6 +115,7 @@ const Login = () => {
                   margin="normal"
                   value={loginPassword.value}
                   onChange={loginPassword.changeHandler}
+                  required
                 />
                 <Button
                   variant="contained"

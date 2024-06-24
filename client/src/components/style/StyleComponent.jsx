@@ -41,6 +41,12 @@ export const StyledChatColumn = styled(Box)({
   flex: 2,
   padding: 0,
 });
+export const StyledHomeColumn = styled(Box)({
+  height: "calc(100vh - 4rem)",
+  flex: 2,
+  padding: 0,
+  backgroundColor:"beige"
+});
 
 export const StyledProfileColumn = styled(Box)({
   backgroundColor: "black",

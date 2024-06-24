@@ -60,7 +60,7 @@ const Header = ({ drawerOpenHandler }) => {
   const [isSearch, setIsSearch] = useState(false);
   const [isNewGroup, setIsNewGroup] = useState(false);
   const [isNotifications, setIsNotifications] = useState(false);
-  const { notifyCount, isNotified } = useSelector(
+  const { notifyCount } = useSelector(
     (state) => state.userNotification
   );
 
@@ -186,7 +186,7 @@ const Header = ({ drawerOpenHandler }) => {
         </Suspense>
       )}
 
-      {isNotifications && (
+      {isNotifications  && (
         <Suspense fallback={<FindFreindsSkeleton />}>
           <NotificationsDialog
             open={isNotifications}

@@ -4,7 +4,7 @@ import { mainBg, onlineColor, textColorInDark } from "../constants/color";
 export const theme = createTheme({
     palette: {
         primary: {
-            main: '#004153',
+            main: mainBg,
         },
         secondary:{
             main:"#2b689d"

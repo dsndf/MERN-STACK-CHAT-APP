@@ -10,7 +10,6 @@ import { cloudinaryInstance, getDataUri } from "../lib/helper.js";
 import { Chat } from "../models/chat.js";
 import { Request } from "../models/request.js";
 import { User } from "../models/user.js";
-import { usersSocket } from "../server.js";
 import { ErrorHandler } from "../utils/ErrorHandler.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 import { sendUserResponse } from "../utils/sendUserResponse.js";
@@ -20,6 +19,8 @@ export const signupUser = catchAsyncError(async (req, res, next) => {
   const { name, username, bio, password } = req.body;
   const file = req.file;
   if (!file) return next(new ErrorHandler("Avatar is required", 400));
+  const isUserExist = await User.findOne({ username });
+  if (isUserExist) return next(new ErrorHandler("Username already exist", 409));
   const user = await User.create({
     name,
     username,
@@ -30,6 +31,7 @@ export const signupUser = catchAsyncError(async (req, res, next) => {
   const mycloud = await cloudinaryInstance.v2.uploader.upload(content, {
     folder: "Chat App",
   });
+  if(!mycloud) return next(new ErrorHandler("Try other avatar image"));
   user.avatar = {
     url: mycloud.secure_url,
     public_id: mycloud.public_id,
@@ -134,6 +136,13 @@ export const sendFreindRequest = catchAsyncError(async (req, res, next) => {
     ],
   });
   if (request) {
+    if (String(request.reciever) === String(me))
+      return next(
+        new ErrorHandler(
+          `User has already been sent you a friend request.`,
+          409
+        )
+      );
     return next(new ErrorHandler(`Request had already been sent.`, 409));
   }
   promises.push(Request.create({ sender: me, reciever: id }));

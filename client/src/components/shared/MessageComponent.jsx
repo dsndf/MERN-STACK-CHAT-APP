@@ -1,20 +1,18 @@
 import {
   Avatar,
   Box,
-  Menu,
-  MenuItem,
-  MenuList,
+
   Stack,
   Typography,
 } from "@mui/material";
-import React, { useRef } from "react";
+import React, { memo} from "react";
 import moment from "moment";
 import { useDispatchAndSelector } from "../../hooks/useDispatchAndSelector";
 import RenderAttachment from "./RenderAttachment";
 import { fileFormat, transformImage } from "../../lib/features";
 import { mainBg } from "../../constants/color";
 import { motion } from "framer-motion";
-import { useDialog } from "../../hooks/useDialog";
+
 
 const MessageComponent = ({
   sender,
@@ -26,31 +24,37 @@ const MessageComponent = ({
     state: { user },
   } = useDispatchAndSelector("auth");
   const isMe = sender?._id === user._id;
-  const messageBoxRef = useRef(null);
-  const deleteMenu = useDialog(false);
+
+
+
+  const MotionBox = motion(Box);
 
   return (
     <>
       {!attachments.length && (
-        <Box
+        <MotionBox
+          initial={{
+            x: isMe ? "100%" : "-100%",
+            opacity: 0,
+          }}
+          whileInView={{
+            x: "0%",
+            opacity: 1,
+          }}
           alignSelf={isMe ? "flex-end" : "flex-start"}
           width={"fit-content"}
           p={"10px"}
           sx={{ bgcolor: "white" }}
           borderRadius={"5px"}
           component={"div"}
-          ref={messageBoxRef}
-          onContextMenu={deleteMenu.openHandler}
+      
+          onContextMenu={(e) => {
+            e.preventDefault();
+            deleteMenu.openHandler();
+          }}
         >
-          <Menu
-            open={deleteMenu.open}
-            onClose={deleteMenu.closeHandler}
-            anchorEl={messageBoxRef?.current}
-          >
-            <MenuList disablePadding>
-              <MenuItem sx={{ fontSize: "15px",color:"red" }}>Delete</MenuItem>
-            </MenuList>
-          </Menu>
+          {" "}
+    
           <Stack
             mb={1}
             flexDirection={"row"}
@@ -73,14 +77,13 @@ const MessageComponent = ({
               {!isMe && sender?.name}
             </Typography>
           </Stack>
-
           <Typography variant="body1" fontSize={["16px"]} color="initial">
             {content}
           </Typography>
           <Typography variant="caption">
             {moment(new Date(createdAt)).fromNow()}
           </Typography>
-        </Box>
+        </MotionBox>
       )}
 
       {attachments.length > 0 &&
@@ -123,4 +126,4 @@ const MessageComponent = ({
   );
 };
 
-export default MessageComponent;
+export default memo(MessageComponent);

@@ -10,6 +10,7 @@ import {
   Box,
   DialogContentText,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import React, { Fragment, useEffect, useState } from "react";
 import UserList from "./UserList";
@@ -70,55 +71,58 @@ const NewGroup = ({ open, closeHandler }) => {
       <Box p></Box>
 
       <DialogTitle textAlign={"center"}>New Group</DialogTitle>
-      {friends.length > 0 ? (
-        <Fragment>
-          <TextField
-            value={newGroupName.value}
-            onChange={newGroupName.changeHandler}
-            error={newGroupName.error && newGroupName.error}
-            helperText={newGroupName.error}
-            label={"Group Name"}
-            FormHelperTextProps={{
-              color: "red",
-            }}
-            size="small"
-            sx={{ m: "1rem" }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            value={searchPeople.value}
-            onChange={searchPeople.changeHandler}
-            placeholder="Search people here"
-            size="small"
-            sx={{ m: "1rem" }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <DialogContent sx={{ width: "20rem", py: 0 }}>
+      <Fragment>
+        <TextField
+          value={newGroupName.value}
+          onChange={newGroupName.changeHandler}
+          error={newGroupName.error && newGroupName.error}
+          helperText={newGroupName.error}
+          label={"Group Name"}
+          FormHelperTextProps={{
+            color: "red",
+          }}
+          size="small"
+          sx={{ m: "1rem" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <TextField
+          value={searchPeople.value}
+          onChange={searchPeople.changeHandler}
+          placeholder="Search people here"
+          size="small"
+          sx={{ m: "1rem" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+      
+        <DialogContent sx={{ width: "20rem", py: 0 }}>
+        { getFriendsResponse.isFetching && (
+          <Box mt={2} textAlign={"center"}>
+            <CircularProgress size={20} />
+          </Box>
+        )}
+          {friends.length ? (
             <UserList
               users={friends}
               handler={selectGroupMemberHandler}
               selectedUsersList={selectedMembers}
             />
-          </DialogContent>
-        </Fragment>
-      ) : (
-        <DialogContent>
-       <EmptyData icon={ <Diversity1 />} textContent={"No Friends Yet"} />
+          ) : (
+          <Typography variant="body1" textAlign={"center"} >No friends</Typography>
+          )}
         </DialogContent>
-      )}
+      </Fragment>
 
       <Box p></Box>
       <DialogActions>
@@ -129,7 +133,7 @@ const NewGroup = ({ open, closeHandler }) => {
           variant="contained"
           color="primary"
           onClick={doneButtonClickHandler}
-          disabled={friends.length === 0}
+          disabled={friends.length === 0 || newGroupName.error}
         >
           Done
         </Button>

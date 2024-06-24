@@ -114,7 +114,7 @@ export const api = createApi({
         credentials: "include",
         body: { members, chat_id },
       }),
-      invalidatesTags: ["MyGroups", "Chat_Details"],
+      invalidatesTags: ["MyGroups","Chat_Details"],
     }),
     removeMember: builder.mutation({
       query: ({ chatId: chat_id, member }) => ({
@@ -123,6 +123,7 @@ export const api = createApi({
         credentials: "include",
         body: { chat_id, member },
       }),
+      
       invalidatesTags: ["MyGroups", "Chat_Details"],
     }),
     deleteGroup: builder.mutation({
@@ -133,6 +134,22 @@ export const api = createApi({
       }),
       invalidatesTags: ["MyGroups"],
     }),
+    leaveGroup:builder.mutation({
+      query:({chatId:chat_id})=>({
+        url:"/chat/leave/group/"+chat_id,
+        method:"PUT",
+        credentials:"include",
+      }),
+      invalidatesTags:['Chats']
+    }),
+    deleteChat:builder.mutation({
+      query:({chatId:chat_id})=>({
+        url:"/chat/"+chat_id,
+        method:"DELETE",
+        credentials:"include",
+      }),
+      invalidatesTags:['Chats']
+    })
   }),
 });
 
@@ -154,4 +171,6 @@ export const {
   useDeleteGroupMutation,
   useRemoveMemberMutation,
   useLazyGetChatDetailsQuery,
+  useLeaveGroupMutation,
+  useDeleteChatMutation
 } = api;

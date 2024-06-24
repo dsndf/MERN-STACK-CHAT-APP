@@ -13,7 +13,9 @@ export const useAddEvents = (
     return () => {
       for (let { event, eventHandler } of listeners) {
         socket.off(event, eventHandler);
-      }
+
+      }      
     };
   }, [...dependencies]);
 };
+

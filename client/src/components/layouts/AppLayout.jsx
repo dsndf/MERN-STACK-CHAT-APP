@@ -27,14 +27,23 @@ import {
   setNewMessageCount,
   setOnlineUsers,
 } from "../../redux/slices/chatSlice";
+import { useErrors } from "../../hooks/useErrors";
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const wrappedComponentprops = { ...props, chatId: id };
-    const { data, error, refetch, isLoading, status, isSuccess, requestId } =
-      useGetMyChatsQuery(null, { refetchOnMountOrArgChange: true });
+    const {
+      data,
+      error: myChatsError,
+      isError: isMyChatError,
+      refetch,
+      isLoading,
+      status,
+      isSuccess,
+      requestId,
+    } = useGetMyChatsQuery(null, { refetchOnMountOrArgChange: true });
     const { open, closeHandler, openHandler } = useDialog({ value: false });
     const chatState = useSelector((state) => state.chat);
     const dispatch = useDispatch();
@@ -118,6 +127,16 @@ const AppLayout = () => (WrappedComponent) => {
     useEffect(() => {
       if (status === "fulfilled") dispatch(setOnlineUsers(data.onlineUsers));
     }, [status]);
+
+    useErrors(
+      [
+        {
+          isError: isMyChatError,
+          error: myChatsError,
+        },
+      ],
+      [isMyChatError]
+    );
 
     return (
       <>

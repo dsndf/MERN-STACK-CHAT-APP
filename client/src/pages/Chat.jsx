@@ -26,7 +26,7 @@ import {
   useSendAttachmentsMutation,
   useSendMessageMutation,
 } from "../redux/api/query.js";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteScrollTop } from "6pp";
 import { useDispatchAndSelector } from "../hooks/useDispatchAndSelector.js";
 import { useAddEvents } from "../hooks/useAddEvents.js";
@@ -42,6 +42,7 @@ import {
 import { STOP_TYPING } from "../../../server/events/serverEvents.js";
 import { useDispatch } from "react-redux";
 import { clearNewMessageCount } from "../redux/slices/chatSlice.js";
+import { useErrors } from "../hooks/useErrors.js";
 
 const Chat = ({ chatId: currentChatId }) => {
   const socket = getSocket();
@@ -63,7 +64,7 @@ const Chat = ({ chatId: currentChatId }) => {
   };
 
   const scrollDownOnMessage = (eleRef) => {
-    eleRef?.current?.scrollIntoView();
+    eleRef?.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const {
@@ -76,20 +77,25 @@ const Chat = ({ chatId: currentChatId }) => {
   //MUTATIONS
   const executeSendMessageMutation = useMutation({
     hook: useSendMessageMutation,
+    loadingMessage:"Sending message..."
   });
   const exceuteSendAttachmentMutation = useMutation({
     hook: useSendAttachmentsMutation,
+    loadingMessage:"Sending file..."
   });
   //QUERIES
   const chatDetails = useGetChatDetailsQuery(
     { chatId: currentChatId, populate: false },
     { skip: !currentChatId }
   );
-
-  const oldMessagesChunks = useGetChatMessagesQuery({
-    chatId: currentChatId,
-    page,
-  });
+  
+  const oldMessagesChunks = useGetChatMessagesQuery(
+    {
+      chatId: currentChatId,
+      page,
+    },
+    { skip: !currentChatId }
+  );
   const oldMessagesChunksData = oldMessagesChunks.data;
   const chatDetailsData = chatDetails.data;
   const { data: oldMessages, setData: setOldMessages } = useInfiniteScrollTop(
@@ -137,7 +143,9 @@ const Chat = ({ chatId: currentChatId }) => {
 
   const typingStarted = useCallback(
     ({ chatId }) => {
-      if (currentChatId === chatId) setIsTyping(true);
+      if (currentChatId === chatId) {
+        setIsTyping(true);
+      }
     },
     [setIsTyping, currentChatId]
   );
@@ -189,8 +197,23 @@ const Chat = ({ chatId: currentChatId }) => {
     };
   }, [currentChatId]);
   const allMessages = [...oldMessages, ...newMessages];
-  console.log({ currentChatId, newMessages, oldMessages });
-
+  // console.log({ currentChatId, newMessages, oldMessages });
+  const navigate = useNavigate();
+  useErrors(
+    [
+      {
+        isError: chatDetails.isError,
+        error: chatDetails.error,
+        fallback: () => navigate("/"),
+      },
+      {
+        isError: oldMessagesChunks.isError,
+        error: oldMessagesChunks.error,
+        fallback: () => navigate("/"),
+      },
+    ],
+    [chatDetails.isError, oldMessagesChunks.isError]
+  );
   return (
     <>
       <Title title={"Chat"} description={"User Chat"} />
@@ -200,7 +223,6 @@ const Chat = ({ chatId: currentChatId }) => {
           height={"100%"}
           sx={{ background: `url(${chatWallpaper})` }}
           position={"relative"}
-
         >
           <Stack
             component={"div"}
@@ -212,7 +234,7 @@ const Chat = ({ chatId: currentChatId }) => {
             width={"100%"}
             spacing={"0.5rem"}
             height={"calc(100% - 4rem)"}
-            sx={{ overflowY: "scroll" }}
+            sx={{ overflowY: "scroll", overflowX: "hidden" }}
           >
             {allMessages &&
               allMessages.map(
@@ -229,11 +251,10 @@ const Chat = ({ chatId: currentChatId }) => {
                   );
                 }
               )}
-            {isTyping && <Typing />}
-            <Box
-              visibility={"hidden"}
-              ref={containerBottomRef}
-            ></Box>
+
+            <Box position={"relative"} ref={containerBottomRef}>
+              {isTyping && <Typing />}
+            </Box>
           </Stack>
           <StyledChatForm
             onSubmit={sendMessageHandler}
@@ -277,7 +298,8 @@ const Chat = ({ chatId: currentChatId }) => {
                   p: "0.7rem",
                   right: 0,
                   bottom: 0,
-                  top:0                }}
+                  top: 0,
+                }}
               >
                 <Send sx={{ rotate: "-25deg" }} />
               </IconButton>

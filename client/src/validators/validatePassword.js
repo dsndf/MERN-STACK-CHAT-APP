@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 
 export const validatePassword = (val) => {
   let isValid = true;
@@ -6,6 +7,7 @@ export const validatePassword = (val) => {
     /^(?=.*[!@#$%^&*()-_+=|{}[\]:;"'<>,.?/])(?=.*[A-Z])(?=.*[0-9]).*$/.test(
       val
     );
+
   if (val.length < 8) {
     isValid = false;
     errorMessage = "Password must contain at least (8)characters";

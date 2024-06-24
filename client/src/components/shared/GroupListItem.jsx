@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Avatar, AvatarGroup, Stack, Typography } from "@mui/material";
 
 import AvatarCard from "./AvatarCard";
@@ -29,4 +29,4 @@ const GroupListItem = ({ group_name, avatar, totalMembers,isActive}) => {
   );
 };
 
-export default GroupListItem;
+export default  memo(GroupListItem);

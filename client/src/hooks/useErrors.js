@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 
-export const useErrors = (errors = []) => {
+export const useErrors = (errors = [], deps = []) => {
   useEffect(() => {
-    for (let { isError, error } of errors) {
+    errors.forEach(({ error, isError, fallback = null }) => {
       if (isError) {
-        toast.error(error?.data?.message);
+        toast.error(error.data?.message);
+        if (fallback && typeof fallback === "function") fallback();
       }
-    }
-  }, [errors]);
+    });
+  }, [...deps]);
 };

@@ -43,6 +43,8 @@ import { useDispatch, useSelector } from "react-redux";
 import UserList from "../components/specific/UserList.jsx";
 import { useMutation } from "../hooks/useMutation.js";
 import FindFreindsSkeleton from "../components/skeleton/FindFreindsSkeleton.jsx";
+import ConfirmDialogSkeleton from "../components/skeleton/ConfirmDialogSkeleton.jsx";
+import { useErrors } from "../hooks/useErrors.js";
 
 const ConfirmDeleteDialog = lazy(() =>
   import("../components/dialog/ConfirmDeleteDialog.jsx")
@@ -66,14 +68,14 @@ const Groups = () => {
 
   const [getChatDetails, getChatDetailsResults] = useLazyGetChatDetailsQuery();
   const groupDetails = getChatDetailsResults.data?.chat;
-
   const executeDeleteGroupMutation = useMutation({
     hook: useDeleteGroupMutation,
   });
+
   const deleteGroupHandler = async () => {
     await executeDeleteGroupMutation({ chatId: groupDetails?._id });
     deleteGroupDialog.closeHandler();
-    navigate("/");
+    navigate('/groups')
   };
   const addGroupMemberSaveChangesHandler = () => {
     addGroupMemberDialog.closeHandler();
@@ -226,6 +228,23 @@ const Groups = () => {
       setNewGroupName("");
     };
   }, [groupId]);
+
+  useErrors(
+    [
+      {
+        isError: getChatDetailsResults.isError,
+        error: getChatDetailsResults.error,
+        fallback:()=> navigate("/groups")
+      },
+      {
+        isError: myGroups.isError,
+        error: myGroups.error,
+        fallback:()=> navigate("/groups")
+      },
+    ],
+    [getChatDetailsResults.isError, myGroups.isError]
+  );
+
   return (
     <Grid m={0} container height={"100vh"}>
       <Grid
@@ -264,7 +283,7 @@ const Groups = () => {
           </IconButton>
         </Box>
 
-        {groupDetails ? (
+        {groupDetails && groupId ? (
           <Fragment>
             {GroupName}
             <Typography
@@ -278,7 +297,7 @@ const Groups = () => {
               <People /> Members
             </Typography>
             {GroupMembersBox}
-            <Suspense fallback={<h6>LOAIND</h6>}>
+            <Suspense fallback={<ConfirmDialogSkeleton />}>
               {deleteGroupDialog.open && (
                 <ConfirmDeleteDialog
                   open={deleteGroupDialog.open}
@@ -290,7 +309,6 @@ const Groups = () => {
                 />
               )}
             </Suspense>
-
             <Suspense fallback={<FindFreindsSkeleton />}>
               {addGroupMemberDialog.open && (
                 <AddGroupMemberDialog

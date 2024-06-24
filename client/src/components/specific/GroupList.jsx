@@ -1,4 +1,4 @@
-import { Stack } from "@mui/material";
+import { Box, Stack ,Typography } from "@mui/material";
 import React, { useEffect } from "react";
 import GroupListItem from "../shared/GroupListItem";
 import { useDispatch } from "react-redux";
@@ -17,14 +17,14 @@ const GroupList = ({
   const navigate = useNavigate();
 
   return (
-    <Stack 
+    <Stack
       alignItems={"center"}
       height={"100vh"}
       sx={{ overflow: "auto" }}
       width={"100%"}
     >
       {groupList &&
-        groupList.map((group,i) => (
+        groupList.map((group, i) => (
           <motion.div
             initial={{ y: "-10%", opacity: 0 }}
             whileInView={{
@@ -46,6 +46,24 @@ const GroupList = ({
             />
           </motion.div>
         ))}
+      {!groupList.length && (
+        <Box>
+          <Typography textAlign={"center"} fontSize={"20px"} p={"2rem"}>
+            No Groups!
+          </Typography>
+          <Typography
+            component={"p"}
+            px={"0.5rem"}
+            display={"flex"}
+            alignItems={"center"}
+            justifyContent={"center"}
+            textAlign={"center"}
+            variant="body1"
+          >
+            Go to Home and create new groups
+          </Typography>
+        </Box>
+      )}
     </Stack>
   );
 };

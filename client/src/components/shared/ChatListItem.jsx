@@ -22,6 +22,12 @@ import { Handshake } from "@mui/icons-material";
 import AvatarCard from "./AvatarCard";
 import { StyledOnlineEffect } from "../style/StyleComponent";
 import { useDialog } from "../../hooks/useDialog";
+import { useMutation } from "../../hooks/useMutation";
+import {
+  useDeleteChatMutation,
+  useLeaveGroupMutation,
+} from "../../redux/api/query";
+import { useNavigate, useParams } from "react-router-dom";
 const CountBox = ({ value }) => {
   return (
     <Box
@@ -57,15 +63,47 @@ const ChatListItem = ({
   const deleteChat = useDialog(false);
   const singleChatRef = useRef(null);
   const groupChatRef = useRef(null);
+  // Leave group code start
+  const { id: chatId } = useParams();
+  const navigate = useNavigate();
+  const excuteLeaveGroupMutation = useMutation({
+    hook: useLeaveGroupMutation,
+    onSuccess: () => {
+      if (chatId && chatId === _id) navigate("/");
+      return;
+    },
+  });
+  const leaveGroupHandler = (e) => {
+    e.stopPropagation();
+    excuteLeaveGroupMutation({ chatId: _id });
+    leaveGroupMenu.closeHandler();
+  };
+  // Leave group code end
+
+  // Delete chat code start
+  const executeDeleteChatMutation = useMutation({
+    hook: useDeleteChatMutation,
+    onSuccess: () => {
+      if (chatId && chatId === _id) navigate("/");
+      return;
+    },
+  });
+  const deleteChatHandler = (e)=>{
+    e.stopPropagation();
+    executeDeleteChatMutation({chatId:_id});
+    deleteChat.closeHandler();
+  }
+  // Delete chat  code end
 
   return (
     <Card
       variant="outlined"
       component={"div"}
       ref={groupChat ? groupChatRef : singleChatRef}
-      onContextMenu={
-        groupChat ? leaveGroupMenu.openHandler : deleteChat.openHandler
-      }
+      onContextMenu={(e) => {
+        e.preventDefault();
+        groupChat ? leaveGroupMenu.openHandler() : deleteChat.openHandler();
+      }}
       sx={{
         borderTopLeftRadius: 0,
         borderBottomLeftRadius: 0,
@@ -112,32 +150,45 @@ const ChatListItem = ({
           )
         }
       />
-      <Menu
-        open={leaveGroupMenu.open}
-        onClose={leaveGroupMenu.closeHandler}
-        anchorEl={groupChatRef?.current}
-        transformOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-      >
-        <MenuList disablePadding>
-          <MenuItem sx={{ fontSize: "14px" }}>Leave Group</MenuItem>
-        </MenuList>
-      </Menu>
-      <Menu
-        open={deleteChat.open}
-        onClose={deleteChat.closeHandler}
-        anchorEl={singleChatRef?.current}
-        transformOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-      >
-        <MenuList disablePadding>
-          <MenuItem sx={{ fontSize: "14px", color: "red" }}>Delete</MenuItem>
-        </MenuList>
-      </Menu>
+      {groupChat ? (
+        <Menu
+          open={leaveGroupMenu.open}
+          onClose={leaveGroupMenu.closeHandler}
+          anchorEl={groupChatRef?.current}
+          transformOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+        >
+          <MenuList disablePadding>
+            <MenuItem sx={{ fontSize: "14px" }} onClick={leaveGroupHandler}>
+              Leave Group
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      ) : (
+        <Menu
+          open={deleteChat.open}
+          onClose={deleteChat.closeHandler}
+          anchorEl={singleChatRef?.current}
+          transformOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+        >
+          <MenuList disablePadding>
+            <MenuItem sx={{ fontSize: "14px", color: "red" }} onClick={deleteChatHandler} >Delete</MenuItem>
+          </MenuList>
+        </Menu>
+      )}
     </Card>
   );
 };

@@ -22,6 +22,7 @@ import { createAttachments } from "../seeders/messages.js";
 import { ErrorHandler } from "../utils/errorHandler.js";
 import { onlineUsers } from "../server.js";
 import { users } from "../../client/src/constants/sampleData.js";
+import { Request } from "../models/request.js";
 
 export const createNewGroup = catchAsyncError(async (req, res, next) => {
   let { name, members } = req.body;
@@ -121,9 +122,13 @@ export const addMembers = catchAsyncError(async (req, res, next) => {
   if (String(req.user._id) !== String(group.creator))
     return next(new ErrorHandler("Only group admin can remove member", 403));
   group.members.push(...members);
-  group.save();
+  await group.save();
 
   emitEvent(req, REFETCH_CHATS, {
+    users: group.members,
+  });
+
+  emitEvent(req, ALERT, {
     users: members,
     message: `You are added into ${group.name}`,
   });
@@ -164,7 +169,7 @@ export const removeMember = catchAsyncError(async (req, res, next) => {
     chatId: chat_id,
     type: REMOVE_MEMBER_ALERT,
   });
-  emitEvent(req, REFETCH_CHATS, { users: [member] });
+  emitEvent(req, REFETCH_CHATS, { users: [...remainingMembers, member] });
 
   res.json({ success: true, message });
 });
@@ -186,12 +191,13 @@ export const leaveGroup = catchAsyncError(async (req, res, next) => {
 
   group.members = remainingMembers;
   await group.save();
-  emitEvent(
-    req,
-    ALERT,
-    { users: remainingMembers },
-    `${req.user.name} left the ${group.name}`
-  );
+  emitEvent(req, ALERT, {
+    users: remainingMembers,
+    message: `${req.user.name} left the ${group.name}`,
+  });
+  emitEvent(req, REFETCH_CHATS, {
+    users: remainingMembers,
+  });
   res.json({ success: true, message: "Leaved Successfully", remainingMembers });
 });
 
@@ -200,21 +206,38 @@ export const deleteChat = catchAsyncError(async (req, res, next) => {
   const chat = await Chat.findById(chat_id);
 
   if (!chat) return next(new ErrorHandler("Chat not found", 404));
-  if (String(chat.creator) !== String(req.user._id_))
-    return next(new ErrorHandler("You can't delete this chat.", 403));
+  // if (String(chat.creator) !== String(req.user._id_))
+  //   return next(new ErrorHandler("You can't delete this chat.", 403));
   const otherMember = getOtherMembers(chat.members, req.user._id);
-
+  //deleting comman Request between both useres
+  await Request.findOneAndDelete({
+    $or: [
+      { sender: req.user._id, reciever: otherMember[0] },
+      { reciever: req.user._id, sender: otherMember[0] },
+    ],
+  });
   await Chat.findByIdAndDelete(chat_id);
 
+  const promises = [];
+  req.user.friends = req.user.friends.filter(
+    (friend) => String(friend) !== String(otherMember[0])
+  );
+  const otherUser = await User.findById(otherMember[0]);
+  otherUser.friends = otherUser.friends.filter(
+    (friend) => String(friend) !== String(req.user._id)
+  );
+
+  promises.push(req.user.save(), otherUser.save());
+  await Promise.all(promises);
   emitEvent(req, ALERT, {
     users: otherMember,
     message: `${req.user.name} has been deleted the chat.`,
   });
   emitEvent(req, REFETCH_CHATS, {
-    users: [...otherMember, req.user._id],
+    users: [...otherMember],
   });
 
-  res.json({ success: true, message: "Leaved Successfully" });
+  res.json({ success: true, message: "Chat deleted successfully" });
 });
 
 export const sendMessage = catchAsyncError(async (req, res, next) => {
@@ -238,7 +261,7 @@ export const sendMessage = catchAsyncError(async (req, res, next) => {
   });
 
   const messageOFAttachmentsForRealTime = {
-    sender: { name: req.user.name, _id: req.user._id },
+    sender: { name: req.user.name, _id: req.user._id, avatar: req.user.avatar },
     chat: chat._id,
     content,
     createdAt: messageOFAttachmentsForDB.createdAt,
@@ -298,9 +321,8 @@ export const getChatDetails = catchAsyncError(async (req, res, next) => {
   const me = req.user._id;
   let query = Chat.findById(chat_id);
   let chat = await query;
+  if (!chat) return next(new ErrorHandler("Chat Not Found", 404));
   const { members } = chat;
-
-  if (!chat) return next(new ErrorHandler("Chat not found", 404));
   if (!members.includes(String(req.user._id))) {
     return next(new ErrorHandler("You don't have access to this chat.", 401));
   }
@@ -340,6 +362,9 @@ export const getMessages = catchAsyncError(async (req, res, next) => {
   const limit = 20;
   const skip = (page - 1) * limit;
   const chat = await Chat.findById(chat_id);
+  if (!chat) {
+    return next(new ErrorHandler("Chat Not Found", 404));
+  }
   if (!chat.members.includes(String(me))) {
     return next(new ErrorHandler("You don't have access to this chat", 401));
   }
@@ -394,16 +419,20 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
 
   const message = await Message.create(messageForDb);
   let messageForRealTime = {
-    sender: {
-      _id: me,
-      name: req.user.name,
-    },
+    sender: { name: req.user.name, _id: req.user._id, avatar: req.user.avatar },
     attachments,
     createdAt: message.createdAt,
   };
   emitEvent(req, MESSAGE_ALERT, {
     chatMessage: messageForRealTime,
     users: chat.members,
+    chatId: chat._id,
+  });
+  emitEvent(req, NEW_MESSAGE_COUNT_ALERT, {
+    users: getOtherMembers(
+      chat.members.map((member) => member._id),
+      req.user._id
+    ),
     chatId: chat._id,
   });
   res.json({ success: true, message: "Sent" });
