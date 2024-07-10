@@ -60,9 +60,7 @@ const Header = ({ drawerOpenHandler }) => {
   const [isSearch, setIsSearch] = useState(false);
   const [isNewGroup, setIsNewGroup] = useState(false);
   const [isNotifications, setIsNotifications] = useState(false);
-  const { notifyCount } = useSelector(
-    (state) => state.userNotification
-  );
+  const { notifyCount } = useSelector((state) => state.userNotification);
 
   const navigate = useNavigate();
   const {
@@ -70,13 +68,13 @@ const Header = ({ drawerOpenHandler }) => {
     state: { loading },
   } = useDispatchAndSelector("auth");
   const notificationAlert = useCallback(() => {
-    if (isNotifications) return;
-    dispatch(setIsNotified(true));
+    if (isNotifications) return dispatch(setIsNotified(true));
     dispatch(incrementNotificationCount());
   }, [isNotifications]);
-  useAddEvents([
-    { event: NOTIFICATION_ALERT, eventHandler: notificationAlert },
-  ]);
+  useAddEvents(
+    [{ event: NOTIFICATION_ALERT, eventHandler: notificationAlert }],
+    { dependencies: [isNotifications] }
+  );
   const openSearchHandler = () => {
     setIsSearch(!isSearch);
   };
@@ -171,7 +169,7 @@ const Header = ({ drawerOpenHandler }) => {
             />
           </StyledIconsBox>
         </StyledToolBar>
-        {loading && <LinearProgress sx={{width:"100%"}} color="secondary" />}
+        {loading && <LinearProgress sx={{ width: "100%" }} color="secondary" />}
       </StyledAppBar>
 
       {isSearch && (
@@ -186,7 +184,7 @@ const Header = ({ drawerOpenHandler }) => {
         </Suspense>
       )}
 
-      {isNotifications  && (
+      {isNotifications && (
         <Suspense fallback={<FindFreindsSkeleton />}>
           <NotificationsDialog
             open={isNotifications}

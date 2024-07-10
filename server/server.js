@@ -16,7 +16,6 @@ import cors from "cors";
 import cloudinary from "cloudinary";
 import { socketAuthentication } from "./middlewares/socketAuthentication.js";
 import {
-
   OFFLINE,
   ONLINE,
   START_TYPING,
@@ -43,6 +42,7 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
 dotenv.config({ path: "./.env" });
 cloudinary.v2.config({
   api_key: 335345271554731,
@@ -105,12 +105,12 @@ io.on("connection", (socket) => {
 
   socket.on(START_TYPING, ({ chatId, members }) => {
     const otherMemberSockets = getSockets(getOtherMembers(members, userId));
-    if(!otherMemberSockets.length) return;
+    if (!otherMemberSockets.length) return;
     io.to(otherMemberSockets).emit("TYPING STARTED", { chatId });
-  }); 
+  });
   socket.on(STOP_TYPING, ({ chatId, members }) => {
     const otherMemberSockets = getSockets(getOtherMembers(members, userId));
-    if(!otherMemberSockets.length) return;
+    if (!otherMemberSockets.length) return;
     io.to(otherMemberSockets).emit("TYPING STOPPED", { chatId });
   });
 
@@ -125,6 +125,7 @@ io.on("connection", (socket) => {
     }
     console.log(socket.id + " disconnected due to " + reason);
     usersSocket.delete(String(userId));
+    console.log({ usersockets: Array.from(usersSocket.values()) });
   });
 });
 

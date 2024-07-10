@@ -35,7 +35,12 @@ const NewGroup = ({ open, closeHandler }) => {
   const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
   const friends = getFriendsResponse?.data?.friends || [];
   useEffect(() => {
-    getFriends({ keyword: searchPeople.value });
+    const tid = setTimeout(() => {
+      getFriends({ keyword: searchPeople.value }, true);
+    }, 2000);
+    return () => {
+      clearTimeout(tid);
+    };
   }, [searchPeople.value]);
   // Get friends code end
 
@@ -105,13 +110,13 @@ const NewGroup = ({ open, closeHandler }) => {
             ),
           }}
         />
-      
+
         <DialogContent sx={{ width: "20rem", py: 0 }}>
-        { getFriendsResponse.isFetching && (
-          <Box mt={2} textAlign={"center"}>
-            <CircularProgress size={20} />
-          </Box>
-        )}
+          {getFriendsResponse.isFetching && (
+            <Box mt={2} textAlign={"center"}>
+              <CircularProgress size={20} />
+            </Box>
+          )}
           {friends.length ? (
             <UserList
               users={friends}
@@ -119,7 +124,9 @@ const NewGroup = ({ open, closeHandler }) => {
               selectedUsersList={selectedMembers}
             />
           ) : (
-          <Typography variant="body1" textAlign={"center"} >No friends</Typography>
+            <Typography variant="body1" textAlign={"center"}>
+              No friends
+            </Typography>
           )}
         </DialogContent>
       </Fragment>

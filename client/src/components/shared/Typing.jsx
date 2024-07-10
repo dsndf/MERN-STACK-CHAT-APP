@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 const Typing = () => {
   const MotionBox = motion(Box);
+  
   return (
     <MotionBox
     initial={
@@ -24,9 +25,9 @@ const Typing = () => {
       width={"fit-content"}
       borderRadius={"0.5rem"}
       zIndex={1}
-      margin={"auto"}
+   
     >
-      <Typography fontWeight={600} letterSpacing={"1px"} variant="subtitle2">
+      <Typography textAlign={'right'} fontWeight={600} letterSpacing={"1px"} variant="subtitle2">
         Typing...
       </Typography>
     </MotionBox>

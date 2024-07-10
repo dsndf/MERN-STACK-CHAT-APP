@@ -77,18 +77,18 @@ const Chat = ({ chatId: currentChatId }) => {
   //MUTATIONS
   const executeSendMessageMutation = useMutation({
     hook: useSendMessageMutation,
-    loadingMessage:"Sending message..."
+    loadingMessage: "Sending message...",
   });
   const exceuteSendAttachmentMutation = useMutation({
     hook: useSendAttachmentsMutation,
-    loadingMessage:"Sending file..."
+    loadingMessage: "Sending files...",
   });
   //QUERIES
   const chatDetails = useGetChatDetailsQuery(
     { chatId: currentChatId, populate: false },
     { skip: !currentChatId }
   );
-  
+
   const oldMessagesChunks = useGetChatMessagesQuery(
     {
       chatId: currentChatId,
@@ -117,7 +117,6 @@ const Chat = ({ chatId: currentChatId }) => {
   const sendAttachmentsHandler = (e) => {
     const files = e.target.files;
     if (files.length > 5) return toast.error("Only 5 files can be sent");
-
     const myForm = new FormData();
     Object.values(files).forEach((file) => myForm.append("files", file));
 
@@ -126,6 +125,7 @@ const Chat = ({ chatId: currentChatId }) => {
       chatId: chatDetailsData?.chat?._id,
       formData: myForm,
     });
+    attachFileDialog.closeHandler();
   };
 
   const onStopTyping = useMemo(() => {
@@ -240,19 +240,23 @@ const Chat = ({ chatId: currentChatId }) => {
               allMessages.map(
                 ({ sender, attachments, content, createdAt, _id }) => {
                   return (
-                    <Fragment key={_id}>
-                      <MessageComponent
-                        attachments={attachments}
-                        sender={sender}
-                        content={content}
-                        createdAt={createdAt}
-                      />
-                    </Fragment>
+                    <MessageComponent
+                      key={_id}
+                      attachments={attachments}
+                      sender={sender}
+                      content={content}
+                      createdAt={createdAt}
+                    />
                   );
                 }
               )}
 
-            <Box position={"relative"} ref={containerBottomRef}>
+            <Box
+              width={"100%"}
+              display={"flex"}
+              justifyContent={"flex-start"}
+              ref={containerBottomRef}
+            >
               {isTyping && <Typing />}
             </Box>
           </Stack>

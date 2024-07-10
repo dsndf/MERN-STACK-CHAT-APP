@@ -4,7 +4,7 @@ import {
   VideoCameraFront as VideoIcon,
 } from "@mui/icons-material";
 import { IconButton, Menu, MenuItem, MenuList, Tooltip } from "@mui/material";
-import React, { useRef } from "react";
+import React, { memo, useRef } from "react";
 
 const AttachFileMenuItem = ({ icon, tooltipTitle, onClick }) => {
   return (
@@ -46,7 +46,6 @@ const AttachFileMenu = ({
   const imageFileInputRef = useRef(null);
   const videoFileInputRef = useRef(null);
   const audioFileInputRef = useRef(null);
-  console.log({ imageFileInputRef, videoFileInputRef });
   const handlers = {
     Image: () => {
       imageFileInputRef.current?.click();
@@ -117,4 +116,4 @@ const AttachFileMenu = ({
   );
 };
 
-export default AttachFileMenu;
+export default memo(AttachFileMenu);

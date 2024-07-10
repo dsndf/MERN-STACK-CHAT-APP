@@ -39,14 +39,19 @@ const AddMember = ({ open, closeHandler, friendsToAvoid = [] }) => {
   const searchPeople = useInputValidation("");
   const [getFriends, getFriendsResponse] = useLazyGetFriendsQuery();
   useEffect(() => {
-    getFriends({ keyword: searchPeople.value });
+    const tid = setTimeout(() => {
+      getFriends({ keyword: searchPeople.value }, true);
+    }, 2000);
+    return () => {
+      clearTimeout(tid);
+    };
   }, [searchPeople.value]);
   // Get friends code end
 
   // Add members code start
   const executeAddMembersMutation = useMutation({
     hook: useAddMembersMutation,
-    loadingMessage:"Saving changes..."
+    loadingMessage: "Saving changes...",
   });
   const executeAddMemberMutationHandler = async () => {
     if (!selectedMembers.length) return;
