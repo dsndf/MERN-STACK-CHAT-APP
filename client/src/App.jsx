@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import {
@@ -9,6 +9,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import { Box, CircularProgress } from "@mui/material";
 import { useDispatchAndSelector } from "./hooks/useDispatchAndSelector.js";
+import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
 
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
@@ -28,7 +29,6 @@ const SuspenseLoader = () => {
       justifyContent={"Center"}
       alignItems={"center"}
       height={"100vh"}
-      width={"100vw"}
     >
       <CircularProgress size={100} />
     </Box>
@@ -38,9 +38,8 @@ const SuspenseLoader = () => {
 const App = () => {
   const {
     dispatch,
-    state: { isAuth, user, message, err },
+    state: { isAuth, user, message, err, isAdmin },
   } = useDispatchAndSelector("auth");
-  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
     dispatch(loadUser());
   }, [dispatch]);
@@ -75,16 +74,30 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/messages" element={<Messages />} />
-          <Route path="/admin/users-management" element={<ManageUsers />} />
-          <Route path="/admin/chats" element={<Chats />} />
+          <Route
+            path="/admin"
+            element={
+              <AdminProtectedRoute
+                isAdmin={isAdmin}
+                redirect={"/admin/login"}
+              ></AdminProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="users-management" element={<ManageUsers />} />
+            <Route path="chats" element={<Chats />} />
+          </Route>
+
           <Route
             path="/admin/login"
             element={
-              <ProtectedRoute isAuth={!isAdmin} redirect={"/admin/dashboard"}>
+              <AdminProtectedRoute
+                isAdmin={!isAdmin}
+                redirect={"/admin/dashboard"}
+              >
                 <AdminLogin />
-              </ProtectedRoute>
+              </AdminProtectedRoute>
             }
           />
         </Routes>

@@ -30,6 +30,9 @@ const SocketApiContext = ({ children }) => {
     socket.on("connect_error", async (err) => {
       toast.error(err.message);
     });
+    return ()=>{
+      // CODE TO OFF THE EVENTS
+    }
   }, []);
   useEffect(() => {
     if (isAuth) {

@@ -62,7 +62,7 @@ const Login = () => {
     formData.append("avatar", avatar);
     dispatch(registerUser(formData));
   };
-  
+
   return (
     <div
       style={{
@@ -71,15 +71,13 @@ const Login = () => {
         alignItems: "center",
         height: "100vh",
         backgroundColor: mainBg,
-        overflow:"auto",
-       
+        overflow: "auto",
       }}
     >
       <Title title={"User Auth"} description={"login"} />
       <Container component={"main"} maxWidth={"xs"}>
         <Paper
           elevation={3}
-          
           sx={{
             padding: 4,
             display: "flex",
@@ -94,7 +92,6 @@ const Login = () => {
 
           {!registerToggle ? (
             <form onSubmit={loginHandler}>
-       
               <>
                 {" "}
                 <TextField
@@ -106,6 +103,7 @@ const Login = () => {
                   value={loginUsername.value}
                   onChange={loginUsername.changeHandler}
                   required
+                  size="small"
                 />
                 <TextField
                   type="password"
@@ -116,6 +114,7 @@ const Login = () => {
                   value={loginPassword.value}
                   onChange={loginPassword.changeHandler}
                   required
+                  size="small"
                 />
                 <Button
                   variant="contained"
@@ -151,7 +150,6 @@ const Login = () => {
             </form>
           ) : (
             <form encType="multipart/form-data" onSubmit={registerHandler}>
-      
               <>
                 <Stack alignItems={"center"} position={"relative"}>
                   <Avatar
@@ -213,11 +211,8 @@ const Login = () => {
                   onChange={username.changeHandler}
                   error={username.error}
                   helperText={username.error}
-        
-                  FormHelperTextProps={{ sx:{fontSize:"14px"} }}
+                  FormHelperTextProps={{ sx: { fontSize: "14px" } }}
                 />
-
-        
 
                 <TextField
                   type="password"
@@ -231,9 +226,9 @@ const Login = () => {
                   onChange={password.changeHandler}
                   error={password.error}
                   helperText={password.error}
-                  FormHelperTextProps={{ sx:{fontSize:"14px"} }}
+                  FormHelperTextProps={{ sx: { fontSize: "14px" } }}
                 />
-          
+
                 {!password.error && password.value && (
                   <Typography
                     sx={{ color: "green" }}

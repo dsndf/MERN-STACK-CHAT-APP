@@ -1,6 +1,7 @@
 import cloudinary from "cloudinary";
 import dataUriparser from "datauri/parser.js";
 import { usersSocket } from "../server.js";
+
 export const getOtherMembers = (members, me, isPopulated = false) => {
   return members.filter((member) => {
     if (isPopulated) {
@@ -55,4 +56,21 @@ export const getSockets = (users) => {
     if (isSocketExist) friendsockets.push(isSocketExist);
   }
   return friendsockets;
+};
+export const configureCookie = (maxAge, sameSite) => {
+  return {
+    httpOnly: process.env.NODE_ENV === "development" ? false : true,
+    secure: process.env.NODE_ENV === "development" ? false : true,
+    maxAge,
+    sameSite: process.env.NODE_ENV === "development" ? false : sameSite,
+  };
+};
+// export const getBase64 = (file) =>
+//   `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+export const deleteFromCloudinary = async (publicIDs = []) => {
+  let promises = [];
+  publicIDs.forEach((public_id) => {
+    promises.push(cloudinaryInstance.v2.uploader.destroy(public_id));
+  });
+  await Promise.all(promises);
 };

@@ -26,6 +26,7 @@ import {
 // import { createUsers } from "./seeders/users.js";
 import { createMessages } from "./seeders/messages.js";
 import { Chat } from "./models/chat.js";
+import mongoose from "mongoose";
 // ............**SEEDERS**...........
 
 process.on("uncaughtException", (err) => {
@@ -68,7 +69,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+
 app.use((req, res, next) => {
+
   req.io = io;
   next();
 });

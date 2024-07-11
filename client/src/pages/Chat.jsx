@@ -13,7 +13,7 @@ import {
 } from "../components/style/StyleComponent";
 import Title from "../components/shared/Title";
 import AppLayout from "../components/layouts/AppLayout";
-import { Box, IconButton, Stack } from "@mui/material";
+import { Box, IconButton, Stack, useTheme } from "@mui/material";
 import chatWallpaper from "../assets/chat/pxfuel.jpg";
 import { AttachFile, Send } from "@mui/icons-material";
 import { hoverMainBg, mainBg } from "../constants/color";
@@ -51,6 +51,7 @@ const Chat = ({ chatId: currentChatId }) => {
   const attachFileDialogAnchorEleRef = useRef();
   const [message, setMessage] = useState("");
   const dispatch = useDispatch();
+  const theme = useTheme();
   //.... ref....
   const containerRef = useRef(null);
   const containerBottomRef = useRef(null);
@@ -295,7 +296,7 @@ const Chat = ({ chatId: currentChatId }) => {
                 type="submit"
                 sx={{
                   bgcolor: mainBg,
-                  "&:hover": { bgcolor: hoverMainBg },
+                  "&:hover": { bgcolor: theme.palette.primary.light },
                   transition: "all 0.5s",
                   color: "white",
                   position: "absolute",

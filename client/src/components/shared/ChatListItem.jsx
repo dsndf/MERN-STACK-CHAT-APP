@@ -88,11 +88,11 @@ const ChatListItem = ({
       return;
     },
   });
-  const deleteChatHandler = (e)=>{
+  const deleteChatHandler = (e) => {
     e.stopPropagation();
-    executeDeleteChatMutation({chatId:_id});
+    executeDeleteChatMutation({ chatId: _id });
     deleteChat.closeHandler();
-  }
+  };
   // Delete chat  code end
 
   return (
@@ -117,7 +117,7 @@ const ChatListItem = ({
     >
       <CardHeader
         sx={{ ml: { xs: "0", md: "1rem" } }}
-        title={name}
+        title={name?.slice(0, 20) + "" + (name?.length > 20?"...":"")}
         subheader={count ? count + " New message" : ""}
         titleTypographyProps={{
           fontWeight: 500,
@@ -185,7 +185,12 @@ const ChatListItem = ({
           }}
         >
           <MenuList disablePadding>
-            <MenuItem sx={{ fontSize: "14px", color: "red" }} onClick={deleteChatHandler} >Delete</MenuItem>
+            <MenuItem
+              sx={{ fontSize: "14px", color: "red" }}
+              onClick={deleteChatHandler}
+            >
+              Delete
+            </MenuItem>
           </MenuList>
         </Menu>
       )}

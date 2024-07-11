@@ -1,4 +1,4 @@
-import { Box, Stack ,Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import React, { useEffect } from "react";
 import GroupListItem from "../shared/GroupListItem";
 import { useDispatch } from "react-redux";
@@ -20,8 +20,7 @@ const GroupList = ({
     <Stack
       alignItems={"center"}
       height={"100vh"}
-      sx={{ overflow: "auto" }}
-      width={"100%"}
+      sx={{ overflow: "auto", width: { xs: "300px", md: "auto" } }}
     >
       {groupList &&
         groupList.map((group, i) => (

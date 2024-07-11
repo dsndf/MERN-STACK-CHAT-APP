@@ -1,10 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import { createDispatchHook } from "react-redux";
+import { toast } from "react-hot-toast";
 import { server } from "../../config/settings";
+import { adminLogin, adminVerifyAuth } from "../thunk/adminAuth";
+import axios from "axios";
 const initialState = {
   user: {},
   isAuth: false,
+  isAdmin: false,
   loading: false,
   err: "",
   message: "",
@@ -31,6 +33,27 @@ export const authSlice = createSlice({
     setIsAuth(state, action) {
       state.isAuth = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(adminLogin.fulfilled, (state, action) => {
+        state.isAdmin = true;
+        state.loading = false;
+        toast.success(action.payload);
+      })
+      .addCase(adminLogin.rejected, (state, action) => {
+        state.loading = false;
+        toast.error(action.error.message);
+      })
+      .addCase(adminVerifyAuth.fulfilled, (state, action) => {
+        state.isAdmin = true;
+        state.loading = false;
+        toast.success("Welcome to Dashboard");
+      })
+      .addCase(adminVerifyAuth.rejected, (state, action) => {
+        state.isAdmin = false;
+        state.loading = false;
+      });
   },
 });
 

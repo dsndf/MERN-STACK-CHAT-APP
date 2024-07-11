@@ -12,17 +12,17 @@ import {
 } from "../events/serverEvents.js";
 import {
   cloudinaryInstance,
+  deleteFromCloudinary,
   getDataUri,
   getFileUrls,
   getOtherMembers,
-  isFriendOnline,
 } from "../lib/helper.js";
 import { Message } from "../models/message.js";
-import { createAttachments } from "../seeders/messages.js";
 import { ErrorHandler } from "../utils/errorHandler.js";
 import { onlineUsers } from "../server.js";
-import { users } from "../../client/src/constants/sampleData.js";
 import { Request } from "../models/request.js";
+import mongoose from "mongoose";
+import { deleteChatMessagesAttachments } from "../utils/deleteChatMessagesAttachments.js";
 
 export const createNewGroup = catchAsyncError(async (req, res, next) => {
   let { name, members } = req.body;
@@ -186,7 +186,8 @@ export const leaveGroup = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Group must have at least 3 members.", 422));
 
   if (String(req.user._id) === String(group.creator)) {
-    group.creator = remainingMembers[0];
+    let randomMember = Math.floor(Math.random() * remainingMembers.length);
+    group.creator = remainingMembers[randomMember];
   }
 
   group.members = remainingMembers;
@@ -195,6 +196,36 @@ export const leaveGroup = catchAsyncError(async (req, res, next) => {
     users: remainingMembers,
     message: `${req.user.name} left the ${group.name}`,
   });
+
+  const newAdmin = await User.findById(group.creator).select("name");
+  if (!newAdmin)
+    return next(new ErrorHandler("New Admin Member not found", 404));
+  let messageForRealTime = {
+    sender: {
+      name: "Chatapp",
+      _id: new mongoose.Types.ObjectId(),
+      avatar: null,
+    },
+    content: newAdmin.name + " is now new group admin.",
+    createdAt: new Date(),
+  };
+
+  await Message.create({
+    sender: messageForRealTime.sender._id,
+    content: messageForRealTime.content,
+    chat: group._id,
+  });
+
+  emitEvent(req, MESSAGE_ALERT, {
+    chatMessage: messageForRealTime,
+    users: remainingMembers,
+    chatId: group._id,
+  });
+  emitEvent(req, NEW_MESSAGE_COUNT_ALERT, {
+    users: remainingMembers,
+    chatId: group._id,
+  });
+
   emitEvent(req, REFETCH_CHATS, {
     users: remainingMembers,
   });
@@ -217,6 +248,8 @@ export const deleteChat = catchAsyncError(async (req, res, next) => {
     ],
   });
   await Chat.findByIdAndDelete(chat_id);
+  await deleteChatMessagesAttachments(chat_id);
+  await Message.deleteMany({ chat: chat_id });
 
   const promises = [];
   req.user.friends = req.user.friends.filter(
@@ -303,6 +336,10 @@ export const deleteGroupChat = catchAsyncError(async (req, res, next) => {
   const otherMembers = getOtherMembers(chat.members, req.user._id);
   const groupName = chat.name;
   await Chat.findOneAndDelete({ _id: chat_id });
+  await deleteChatMessagesAttachments(chat_id);
+
+  await Message.deleteMany({ chat: chat_id });
+
   emitEvent(req, ALERT, {
     users: otherMembers,
     message: `${groupName} has been deleted`,
@@ -405,7 +442,7 @@ export const sendAttachments = catchAsyncError(async (req, res, next) => {
   let attachments = [];
   for (let i of filesUri) {
     const myCloud = await cloudinaryInstance.v2.uploader.upload(i?.content, {
-      folder: "Attachments",
+      folder: "Chat App Attachments",
       resource_type: "auto",
     });
     attachments.push({ url: myCloud.secure_url, public_id: myCloud.public_id });

@@ -16,7 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { lightGrayBg } from "../constants/color";
+
 import {
   KeyboardBackspace,
   Menu,

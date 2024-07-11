@@ -1,4 +1,3 @@
-import { tokenCookieOptions } from "../constants/cookie.js";
 import { emitEvent } from "../events/emitEvent.js";
 import {
   ALERT,
@@ -6,7 +5,11 @@ import {
   OFFLINE,
   REFETCH_CHATS,
 } from "../events/serverEvents.js";
-import { cloudinaryInstance, getDataUri } from "../lib/helper.js";
+import {
+  cloudinaryInstance,
+  configureCookie,
+  getDataUri,
+} from "../lib/helper.js";
 import { Chat } from "../models/chat.js";
 import { Request } from "../models/request.js";
 import { User } from "../models/user.js";
@@ -29,9 +32,9 @@ export const signupUser = catchAsyncError(async (req, res, next) => {
   });
   const { content } = await getDataUri(file);
   const mycloud = await cloudinaryInstance.v2.uploader.upload(content, {
-    folder: "Chat App",
+    folder: "Chat App DP",
   });
-  if(!mycloud) return next(new ErrorHandler("Try other avatar image"));
+  if (!mycloud) return next(new ErrorHandler("Try other avatar image"));
   user.avatar = {
     url: mycloud.secure_url,
     public_id: mycloud.public_id,
@@ -215,7 +218,7 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
 });
 
 export const logoutUser = catchAsyncError(async (req, res, next) => {
-  res.clearCookie("chatIoToken");
+  res.clearCookie("chatIoToken", configureCookie(0, "none"));
   const myFriends = req.user.friends;
   emitEvent(req, OFFLINE, { users: myFriends });
   res.json({ success: true, message: "Logged out successfully" });

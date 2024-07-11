@@ -2,21 +2,23 @@ import { Message } from "../models/message.js";
 import { User } from "../models/user.js";
 import { Chat } from "../models/chat.js";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
-import { getFileUrls } from "../lib/helper.js";
+import { configureCookie, getFileUrls } from "../lib/helper.js";
 import { sendAdminResponse } from "../utils/sendAdminResponse.js";
-import { tokenCookieOptions } from "../constants/cookie.js";
+import { ErrorHandler } from "../utils/ErrorHandler.js";
 
 export const adminLogin = catchAsyncError((req, res, next) => {
-  const { passkey } = req.body;
-  console.log({ passkey });
-  if (!(passkey === process.env.ADMIN_SECRET_KEY)) {
+  const {
+    passkey: { value },
+  } = req.body;
+  console.log({ value });
+  if (value !== process.env.ADMIN_SECRET_KEY) {
     return next(new ErrorHandler("Invalid passkey", 400));
   }
   sendAdminResponse(res, "Logged in successfully");
 });
 
 export const adminLogout = catchAsyncError((req, res, next) => {
-  res.clearCookie("chatIO-admin-token", tokenCookieOptions);
+  res.clearCookie("chatIO-admin-token", configureCookie(0, "none"));
   res.json({
     success: true,
     message: "Logged out successfully",
@@ -102,4 +104,10 @@ export const getAllMessages = catchAsyncError(async (req, res, next) => {
     .populate("sender", "name avatar")
     .lean();
   res.json({ success: true, messages });
+});
+
+export const adminVerifyAuth = catchAsyncError((req, res, next) => {
+  res.json({
+    success: true,
+  });
 });

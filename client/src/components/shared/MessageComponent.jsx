@@ -108,7 +108,7 @@ const MessageComponent = ({
               <Box>
                 {" "}
                 <a
-                  href={transformImage(url)}
+                  href={transformImage(url,200)}
                   target="_blank"
                   download
                   style={{ color: "black" }}
