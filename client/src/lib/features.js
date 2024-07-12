@@ -45,3 +45,8 @@ export const checkIsOnline = (onlineUsers = [], chatMembers = []) => {
   }
   return false;
 };
+
+export const limitString = (str = "", limit) => {
+  if(str.length<=limit) return str; 
+  return str.slice(0, limit)+"...";
+};

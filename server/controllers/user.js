@@ -28,8 +28,8 @@ export const signupUser = catchAsyncError(async (req, res, next) => {
     name,
     username,
     bio,
-    password,
-  });
+    password, 
+  }); 
   const { content } = await getDataUri(file);
   const mycloud = await cloudinaryInstance.v2.uploader.upload(content, {
     folder: "Chat App DP",

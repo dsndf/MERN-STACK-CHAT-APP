@@ -40,8 +40,11 @@ import {
   TYPING_STARTED,
 } from "../events/clientEvents.js";
 import { STOP_TYPING } from "../../../server/events/serverEvents.js";
-import { useDispatch } from "react-redux";
-import { clearNewMessageCount } from "../redux/slices/chatSlice.js";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  clearNewMessageCount,
+  setLastChatMessage,
+} from "../redux/slices/chatSlice.js";
 import { useErrors } from "../hooks/useErrors.js";
 
 const Chat = ({ chatId: currentChatId }) => {
@@ -162,6 +165,12 @@ const Chat = ({ chatId: currentChatId }) => {
       if (currentChatId !== chatId) return;
       setIsTyping(false);
       setNewMessages((prev) => [...prev, chatMessage]);
+      dispatch(
+        setLastChatMessage({
+          chat: currentChatId,
+          lastMessage: chatMessage.content || "file",
+        })
+      );
     },
     [setNewMessages, currentChatId]
   );
@@ -197,7 +206,24 @@ const Chat = ({ chatId: currentChatId }) => {
       setMessage("");
     };
   }, [currentChatId]);
+
+  useEffect(() => {
+    if (oldMessagesChunksData?.messages?.length) {
+      let messages = [...oldMessagesChunksData.messages];
+      let lastMessage = messages.pop();
+      let isContent = lastMessage?.content || "";
+      let isFile = lastMessage?.attachments?.length > 0 ? "file" : "";
+      dispatch(
+        setLastChatMessage({
+          chat: currentChatId,
+          lastMessage: isFile ? isFile : isContent,
+        })
+      );
+    }
+  }, [oldMessagesChunksData]);
+
   const allMessages = [...oldMessages, ...newMessages];
+
   // console.log({ currentChatId, newMessages, oldMessages });
   const navigate = useNavigate();
   useErrors(

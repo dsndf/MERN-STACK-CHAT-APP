@@ -4,6 +4,9 @@ const initialState = {
   newMessageCount: localStorage.getItem("chatNewMessageCount")
     ? JSON.parse(localStorage.getItem("chatNewMessageCount"))
     : [],
+  lastChatMessage: localStorage.getItem("lastChatMessage")
+    ? JSON.parse(localStorage.getItem("lastChatMessage"))
+    : {},
 };
 
 export const chatSlice = createSlice({
@@ -42,7 +45,24 @@ export const chatSlice = createSlice({
         JSON.stringify(state.newMessageCount)
       );
     },
+    setLastChatMessage(state, action) {
+      let data = state.lastChatMessage;
+      const { chat, lastMessage } = action.payload;
+      if (!data) {
+        data = { [chat]: lastMessage };
+      } else {
+        const currentChatData = data[chat];
+        if (!currentChatData) data = { ...data, [chat]: lastMessage };
+        if (currentChatData) data[chat] = lastMessage;
+      }
+      state.lastChatMessage = data;
+      localStorage.setItem("lastChatMessage", JSON.stringify(data));
+    },
   },
 });
-export const { clearNewMessageCount, setOnlineUsers, setNewMessageCount } =
-  chatSlice.actions;
+export const {
+  setLastChatMessage,
+  clearNewMessageCount,
+  setOnlineUsers,
+  setNewMessageCount,
+} = chatSlice.actions;

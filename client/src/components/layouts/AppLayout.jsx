@@ -24,6 +24,7 @@ import {
 } from "../../events/clientEvents";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  setLastChatMessage,
   setNewMessageCount,
   setOnlineUsers,
 } from "../../redux/slices/chatSlice";
@@ -125,7 +126,12 @@ const AppLayout = () => (WrappedComponent) => {
     );
 
     useEffect(() => {
-      if (status === "fulfilled") dispatch(setOnlineUsers(data.onlineUsers));
+      if (status === "fulfilled") {
+        dispatch(setOnlineUsers(data.onlineUsers));
+        data.chats.forEach((v)=>{
+          dispatch(setLastChatMessage({chat:v._id,lastMessage:v.lastMessage}));
+        })
+      }
     }, [status]);
 
     useErrors(

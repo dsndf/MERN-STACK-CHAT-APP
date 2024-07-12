@@ -50,7 +50,13 @@ export const createNewGroup = catchAsyncError(async (req, res, next) => {
 export const getMyChats = catchAsyncError(async (req, res, next) => {
   const me = req.user._id;
   let chats = await Chat.find({ members: me })
-    .populate("members", "name avatar")
+    .populate([
+      { path: "members", select: "name avatar" },
+      {
+        path: "lastMessage",
+        select: "content attachments",
+      },
+    ])
     .lean();
 
   chats = chats.map((chat) => {
@@ -71,6 +77,9 @@ export const getMyChats = catchAsyncError(async (req, res, next) => {
       members: chat.members.map(({ _id }) => {
         if (String(_id) !== String(me)) return _id;
       }),
+      lastMessage:
+        (chat.lastMessage?.content && chat.lastMessage.content) ||
+        (chat.lastMessage?.attachments.length ? "file" : ""),
     };
   });
   res.json({ success: true, chats, onlineUsers: Array.from(onlineUsers) });
@@ -293,6 +302,9 @@ export const sendMessage = catchAsyncError(async (req, res, next) => {
     content,
   });
 
+  chat.lastMessage = messageOFAttachmentsForDB._id;
+  await chat.save();
+
   const messageOFAttachmentsForRealTime = {
     sender: { name: req.user.name, _id: req.user._id, avatar: req.user.avatar },
     chat: chat._id,
@@ -303,6 +315,7 @@ export const sendMessage = catchAsyncError(async (req, res, next) => {
     "message alert to ",
     chat.members.map((member) => member._id)
   );
+
   emitEvent(req, MESSAGE_ALERT, {
     users: chat.members.map((member) => member._id),
     chatMessage: messageOFAttachmentsForRealTime,

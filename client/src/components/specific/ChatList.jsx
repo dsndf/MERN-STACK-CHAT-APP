@@ -7,8 +7,11 @@ import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Search } from "@mui/icons-material";
 
-const ChatList = ({ chats=[], activeChatId, onlineUsers = [] }) => {
-  const { newMessageCount } = useSelector((state) => state.chat);
+const ChatList = ({ chats = [], activeChatId, onlineUsers = [] }) => {
+  const { newMessageCount, lastChatMessage } = useSelector(
+    (state) => state.chat
+  );
+
   return (
     <Box sx={{ width: { xs: "300px", md: "auto" } }}>
       {chats &&
@@ -30,6 +33,7 @@ const ChatList = ({ chats=[], activeChatId, onlineUsers = [] }) => {
                   avatar={chat?.avatar}
                   groupChat={chat?.isGroup}
                   isSelected={activeChatId === chat?._id}
+                  lastMessage={lastChatMessage[chat?._id]}
                   isOnline={checkIsOnline(onlineUsers, chat?.members)}
                   count={
                     newMessageCount?.find((e) => e.chat === chat?._id)?.count
@@ -44,8 +48,16 @@ const ChatList = ({ chats=[], activeChatId, onlineUsers = [] }) => {
           <Typography textAlign={"center"} fontSize={"20px"} p={"2rem"}>
             No Chats!
           </Typography>
-          <Typography component={'p'} px={"0.5rem"} display={"flex"} alignItems={"center"} justifyContent={"center"} textAlign={"center"} variant="body1"  >
-            Go to search <Search/> and create new chats 
+          <Typography
+            component={"p"}
+            px={"0.5rem"}
+            display={"flex"}
+            alignItems={"center"}
+            justifyContent={"center"}
+            textAlign={"center"}
+            variant="body1"
+          >
+            Go to search <Search /> and create new chats
           </Typography>
         </Box>
       )}

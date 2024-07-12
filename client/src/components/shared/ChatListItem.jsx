@@ -28,6 +28,7 @@ import {
   useLeaveGroupMutation,
 } from "../../redux/api/query";
 import { useNavigate, useParams } from "react-router-dom";
+import { limitString } from "../../lib/features";
 const CountBox = ({ value }) => {
   return (
     <Box
@@ -58,6 +59,7 @@ const ChatListItem = ({
   handleDeleteChatOpen,
   isSelected = false,
   count = 0,
+  lastMessage = "",
 }) => {
   const leaveGroupMenu = useDialog(false);
   const deleteChat = useDialog(false);
@@ -117,15 +119,20 @@ const ChatListItem = ({
     >
       <CardHeader
         sx={{ ml: { xs: "0", md: "1rem" } }}
-        title={name?.slice(0, 20) + "" + (name?.length > 20?"...":"")}
-        subheader={count ? count + " New message" : ""}
+        title={name?.slice(0, 20) + "" + (name?.length > 20 ? "..." : "")}
+        subheader={
+          count ? count + " New message" : limitString(lastMessage, 20)
+        }
         titleTypographyProps={{
           fontWeight: 500,
           color: isSelected ? "#fff" : "black",
           ml: "1rem",
           fontSize: "15px",
         }}
-        subheaderTypographyProps={{ ml: 2, color: "green" }}
+        subheaderTypographyProps={{
+          ml: 2,
+          color: count ? "green" : isSelected ? "lightGray" : "gray",
+        }}
         avatar={<AvatarCard avatar={avatar} max={4} />}
         action={
           isOnline && (
