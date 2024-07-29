@@ -4,11 +4,11 @@ import jwt from "jsonwebtoken";
 import { catchAsyncError } from "../utils/catchAsyncError.js";
 
 export const authentication = catchAsyncError(async (req, res, next) => {
-  const { chatIoToken } = req.cookies;
-  console.log({ chatIoToken });
-  if (!chatIoToken) return next(new ErrorHandler("Token expired.", 401));
+  const { chatifyToken } = req.cookies;
+  console.log({ chatifyToken });
+  if (!chatifyToken) return next(new ErrorHandler("Session Expired.", 401));
 
-  const decodeToken = jwt.verify(chatIoToken, process.env.SECRET_KEY);
+  const decodeToken = jwt.verify(chatifyToken, process.env.SECRET_KEY);
   if (!decodeToken?._id)
     return next(
       new ErrorHandler("Invalid Token or Token has been expired.", 401)

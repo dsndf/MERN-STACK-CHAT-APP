@@ -6,6 +6,7 @@ import {
   getAllMessages,
   getAllUsers,
   adminLogout,
+  adminVerifyAuth,
 } from "../controllers/admin.js";
 import { validateAdminLogin } from "../validators/user.js";
 import { authenticateAdmin } from "../middlewares/authenticateAdmin.js";
@@ -18,7 +19,7 @@ adminRouter
 
 adminRouter.use(authenticateAdmin);
 
-adminRouter.route('/verify/auth').get()
+adminRouter.route('/verify/auth').get(adminVerifyAuth)
 adminRouter.route("/logout").get(adminLogout);
 adminRouter.route("/stats").get(getAdminStats);
 adminRouter.route("/chats").get(getAllChats);

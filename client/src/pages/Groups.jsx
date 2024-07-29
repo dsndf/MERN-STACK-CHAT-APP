@@ -45,6 +45,7 @@ import { useMutation } from "../hooks/useMutation.js";
 import FindFreindsSkeleton from "../components/skeleton/FindFreindsSkeleton.jsx";
 import ConfirmDialogSkeleton from "../components/skeleton/ConfirmDialogSkeleton.jsx";
 import { useErrors } from "../hooks/useErrors.js";
+import Title from "../components/shared/Title.jsx";
 
 const ConfirmDeleteDialog = lazy(() =>
   import("../components/dialog/ConfirmDeleteDialog.jsx")
@@ -75,7 +76,7 @@ const Groups = () => {
   const deleteGroupHandler = async () => {
     await executeDeleteGroupMutation({ chatId: groupDetails?._id });
     deleteGroupDialog.closeHandler();
-    navigate('/groups')
+    navigate("/groups");
   };
   const addGroupMemberSaveChangesHandler = () => {
     addGroupMemberDialog.closeHandler();
@@ -234,103 +235,106 @@ const Groups = () => {
       {
         isError: getChatDetailsResults.isError,
         error: getChatDetailsResults.error,
-        fallback:()=> navigate("/groups")
+        fallback: () => navigate("/groups"),
       },
       {
         isError: myGroups.isError,
         error: myGroups.error,
-        fallback:()=> navigate("/groups")
+        fallback: () => navigate("/groups"),
       },
     ],
     [getChatDetailsResults.isError, myGroups.isError]
   );
 
   return (
-    <Grid m={0} container height={"100vh"}>
-      <Grid
-        item
-        display={{ xs: "none", md: "block" }}
-        md={4}
-        borderRight={"1px solid lightgray"}
-      >
-        <GroupList groupList={myGroups.data?.groups} activeId={groupId} />
-      </Grid>
-      <Grid item xs={12} md={8}>
-        <Box
-          width={"100%"}
-          position={"sticky"}
-          top={0}
-          p={"1rem"}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
+    <>
+      <Title title={"Groups"} description={"My groups"} />
+      <Grid m={0} container height={"100vh"}>
+        <Grid
+          item
+          display={{ xs: "none", md: "block" }}
+          md={4}
+          borderRight={"1px solid lightgray"}
         >
-          <IconButton
-            onClick={navigateBack}
-            sx={{
-              bgcolor: "#3f3f3f",
-              transition: "all 0.5s",
-              "&:hover": { bgcolor: "black" },
-            }}
+          <GroupList groupList={myGroups.data?.groups} activeId={groupId} />
+        </Grid>
+        <Grid item xs={12} md={8}>
+          <Box
+            width={"100%"}
+            position={"sticky"}
+            top={0}
+            p={"1rem"}
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
           >
-            <KeyboardBackspace color="light" />
-          </IconButton>
-          <IconButton
-            sx={{ display: { xs: "block", md: "none" } }}
-            onClick={drawer.openHandler}
-          >
-            {drawer.open ? <Close /> : <Menu />}
-          </IconButton>
-        </Box>
-
-        {groupDetails && groupId ? (
-          <Fragment>
-            {GroupName}
-            <Typography
-              variant="h6"
-              color="initial"
-              display={"flex"}
-              alignItems={"center"}
-              gap={"0.5rem"}
-              p={"1.2rem"}
+            <IconButton
+              onClick={navigateBack}
+              sx={{
+                bgcolor: "#3f3f3f",
+                transition: "all 0.5s",
+                "&:hover": { bgcolor: "black" },
+              }}
             >
-              <People /> Members
+              <KeyboardBackspace color="light" />
+            </IconButton>
+            <IconButton
+              sx={{ display: { xs: "block", md: "none" } }}
+              onClick={drawer.openHandler}
+            >
+              {drawer.open ? <Close /> : <Menu />}
+            </IconButton>
+          </Box>
+
+          {groupDetails && groupId ? (
+            <Fragment>
+              {GroupName}
+              <Typography
+                variant="h6"
+                color="initial"
+                display={"flex"}
+                alignItems={"center"}
+                gap={"0.5rem"}
+                p={"1.2rem"}
+              >
+                <People /> Members
+              </Typography>
+              {GroupMembersBox}
+              <Suspense fallback={<ConfirmDialogSkeleton />}>
+                {deleteGroupDialog.open && (
+                  <ConfirmDeleteDialog
+                    open={deleteGroupDialog.open}
+                    openHanlder={deleteGroupDialog.openHandler}
+                    closeHandler={deleteGroupDialog.closeHandler}
+                    deleteAction={deleteGroupHandler}
+                    title={"Delete Group"}
+                    content={"Are you sure you want to delete this group"}
+                  />
+                )}
+              </Suspense>
+              <Suspense fallback={<FindFreindsSkeleton />}>
+                {addGroupMemberDialog.open && (
+                  <AddGroupMemberDialog
+                    open={addGroupMemberDialog.open}
+                    openHanlder={addGroupMemberDialog.openHandler}
+                    closeHandler={addGroupMemberDialog.closeHandler}
+                    saveChangesAction={addGroupMemberSaveChangesHandler}
+                    friendsToAvoid={groupDetails?.members.map(({ _id }) => _id)}
+                  />
+                )}
+              </Suspense>
+            </Fragment>
+          ) : (
+            <Typography variant="h5" p={"4rem"} textAlign={"center"}>
+              Select a group to edit
             </Typography>
-            {GroupMembersBox}
-            <Suspense fallback={<ConfirmDialogSkeleton />}>
-              {deleteGroupDialog.open && (
-                <ConfirmDeleteDialog
-                  open={deleteGroupDialog.open}
-                  openHanlder={deleteGroupDialog.openHandler}
-                  closeHandler={deleteGroupDialog.closeHandler}
-                  deleteAction={deleteGroupHandler}
-                  title={"Delete Group"}
-                  content={"Are you sure you want to delete this group"}
-                />
-              )}
-            </Suspense>
-            <Suspense fallback={<FindFreindsSkeleton />}>
-              {addGroupMemberDialog.open && (
-                <AddGroupMemberDialog
-                  open={addGroupMemberDialog.open}
-                  openHanlder={addGroupMemberDialog.openHandler}
-                  closeHandler={addGroupMemberDialog.closeHandler}
-                  saveChangesAction={addGroupMemberSaveChangesHandler}
-                  friendsToAvoid={groupDetails?.members.map(({ _id }) => _id)}
-                />
-              )}
-            </Suspense>
-          </Fragment>
-        ) : (
-          <Typography variant="h5" p={"4rem"} textAlign={"center"}>
-            Select a group to edit
-          </Typography>
-        )}
+          )}
+        </Grid>
+        <Drawer open={drawer.open} onClose={drawer.closeHandler}>
+          <GroupList groupList={myGroups.data?.groups} activeId={groupId} />
+        </Drawer>
       </Grid>
-      <Drawer open={drawer.open} onClose={drawer.closeHandler}>
-        <GroupList groupList={myGroups.data?.groups} activeId={groupId} />
-      </Drawer>
-    </Grid>
+    </>
   );
 };
 

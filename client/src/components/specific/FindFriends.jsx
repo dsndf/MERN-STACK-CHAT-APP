@@ -19,9 +19,13 @@ import {
   useSendFriendRequestMutation,
 } from "../../redux/api/query";
 import { useMutation } from "../../hooks/useMutation";
+import { useErrors } from "../../hooks/useErrors";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const FindFriends = ({ open, closeHandler }) => {
   // Searching users code start
+  const navigate = useNavigate();
   const search = useInputValidation("");
   const [searchUsers, searchUsersResult] = useLazySearchUserQuery();
   useEffect(() => {
@@ -37,6 +41,19 @@ const FindFriends = ({ open, closeHandler }) => {
     hook: useSendFriendRequestMutation,
   });
   // Send Friend req  code end
+  useErrors(
+    [
+      {
+        isError: searchUsersResult.isError,
+        error: searchUsersResult.error,
+        fallback: () => {
+          if (searchUsersResult.error.status === 401)
+            return navigate("/user/auth");
+        },
+      },
+    ],
+    [searchUsersResult.isError]
+  );
 
   return (
     <Dialog open={open}>

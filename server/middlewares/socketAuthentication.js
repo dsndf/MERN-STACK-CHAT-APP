@@ -5,7 +5,7 @@ export const socketAuthentication = async (err, socket, next) => {
   try {
     if (err) return next(err);
     const req = socket.request;
-    const token = req.cookies["chatIoToken"];
+    const token = req.cookies["chatifyToken"];
     if (!token)
       return next(new ErrorHandler("Please login to access this route", 401));
     const decodeToken = jwt.verify(token, process.env.SECRET_KEY);

@@ -7,8 +7,28 @@ import { fileFormat } from "../../lib/features";
 import RenderAttachment from "../../components/shared/RenderAttachment";
 import moment from "moment";
 import { Delete, Edit } from "@mui/icons-material";
+import { useFetchData } from "6pp";
+import { server } from "../../config/settings";
+import { useErrors } from "../../hooks/useErrors";
+import Title from "../../components/shared/Title";
 
 const Messages = () => {
+  const {
+    data,
+    error: usersError,
+    loading,
+  } = useFetchData(server + "/admin/messages", "admin-messages");
+  console.log({ data });
+  useErrors(
+    [
+      {
+        isError: Boolean(usersError),
+        error: usersError,
+      },
+    ],
+    [usersError]
+  );
+
   const columns = useMemo(() => {
     return [
       {
@@ -28,14 +48,20 @@ const Messages = () => {
         headerName: "ATTACHMENTS",
         width: 200,
         headerClassName: "table-header",
+        headerAlign:"center",
         renderCell: (params) => {
           const { attachments } = params.row;
           return (
-            <Stack>
+            <Stack alignItems={"flex-start"} height={"100%"} style={{ overflowY: "auto" }}>
               {attachments &&
                 attachments.map((i) => {
                   const file = fileFormat(i?.url);
-                  return <RenderAttachment url={i?.url} file={file} />;
+                  return (
+                    <a href={i?.url} key={i?.public_id} download>
+
+                      <RenderAttachment url={i?.url} file={file} />
+                    </a>
+                  );
                 })}
             </Stack>
           );
@@ -73,45 +99,31 @@ const Messages = () => {
           <>{moment().format("YYYY MMM DD ,  HH:MM A")}</>
         ),
       },
-      {
-        field: "actions",
-        headerName: "ACTIONS",
-        width: 150,
-        headerClassName: "table-header",
-        renderCell: (params) => (
-          <Stack direction={"row"} alignItems={"center"} gap={"1rem"}>
-            <IconButton color="dark">
-              <Edit />
-            </IconButton>
-            <IconButton color="dark">
-              <Delete />
-            </IconButton>
-          </Stack>
-        ),
-      },
     ];
   }, []);
   const [rows, setRows] = useState([]);
   useEffect(() => {
-    setRows(
-      sampleMessages.map((i) => {
-        return {
-          id: i._id,
-          content: i.content,
-          creator: {
-            name: i.sender.name,
-            avatar: i.sender.avatar,
-          },
-          createdAt: i.createdAt,
-          attachments: i.attachments,
-          chat: i.chatId,
-        };
-      })
-    );
-  }, []);
+    if (data?.messages)
+      setRows(
+        data?.messages?.map((i) => {
+          return {
+            id: i._id,
+            content: i.content,
+            creator: {
+              name: i.sender?.name,
+              avatar: i.sender?.avatar?.url,
+            },
+            createdAt: i.createdAt,
+            attachments: i.attachments,
+            chat: i.chat,
+          };
+        })
+      );
+  }, [data]);
 
   return (
     <AdminLayout>
+        <Title title={"Messages"} description={"Admin All Messages."} />
       <Table columns={columns} rows={rows} title={"MESSAGES"} rowHeight={150} />
     </AdminLayout>
   );

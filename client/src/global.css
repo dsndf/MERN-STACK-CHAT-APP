@@ -76,8 +76,9 @@ a {
 
 ::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
-
+::-webkit-hor
 /* Track */
 ::-webkit-scrollbar-track {
   box-shadow: inset 0 0 5px grey;

@@ -241,9 +241,10 @@ const Chat = ({ chatId: currentChatId }) => {
     ],
     [chatDetails.isError, oldMessagesChunks.isError]
   );
+  console.log({ chatDetailsData });
   return (
     <>
-      <Title title={"Chat"} description={"User Chat"} />
+      <Title title={chatDetailsData?.chat?.name} description={""} />
 
       <StyledChatColumn>
         <Stack
@@ -251,6 +252,7 @@ const Chat = ({ chatId: currentChatId }) => {
           sx={{ background: `url(${chatWallpaper})` }}
           position={"relative"}
         >
+       
           <Stack
             component={"div"}
             ref={containerRef}

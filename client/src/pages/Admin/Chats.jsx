@@ -1,12 +1,37 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../../components/layouts/AdminLayout";
 import Table from "../../components/shared/Table";
-import { Avatar, AvatarGroup, IconButton, Stack, Typography } from "@mui/material";
+import {
+  Avatar,
+  AvatarGroup,
+  IconButton,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
 import { chats } from "../../constants/sampleData";
+import { useFetchData } from "6pp";
+import { server } from "../../config/settings";
+import { useErrors } from "../../hooks/useErrors";
+import Title from "../../components/shared/Title";
 
 const Chats = () => {
+  const {
+    data,
+    error: chatsError,
+    loading,
+  } = useFetchData(server + "/admin/chats", "admin-chats");
+
+  useErrors(
+    [
+      {
+        isError: Boolean(chatsError),
+        error: chatsError,
+      },
+    ],
+    [chatsError]
+  );
+
   const [rows, setRows] = useState([]);
   const columns = useMemo(
     () => [
@@ -29,10 +54,9 @@ const Chats = () => {
         width: 250,
         renderCell: (params) => (
           <AvatarGroup>
-            {
-              params.row.avatar?.map((i,ind)=><Avatar key={i} src={i} />)
-            }
-         
+            {params.row.avatar?.map(({ public_id, url }, ind) => (
+              <Avatar key={public_id} src={url} />
+            ))}
           </AvatarGroup>
         ),
       },
@@ -44,8 +68,8 @@ const Chats = () => {
         renderCell: (params) => {
           const { creator } = params.row;
           return (
-            <Stack direction={"row"} gap={2}  alignItems={'center'}>
-              <Avatar src={creator?.avatar} />
+            <Stack direction={"row"} gap={2} alignItems={"center"}>
+              <Avatar src={creator?.avatar?.url} />
               <Typography variant="p" color="initial">
                 {creator?.name}
               </Typography>
@@ -58,7 +82,6 @@ const Chats = () => {
         headerName: "TOTAL MEMBERS",
         headerClassName: "table-header",
         width: 200,
-        
       },
       {
         field: "totalMessages",
@@ -66,39 +89,32 @@ const Chats = () => {
         headerClassName: "table-header",
         width: 200,
       },
-      {
-        field: "action",
-        headerName: "Action",
-        headerClassName: "table-header",
-        width: 150,
-        align: "center",
-        headerAlign: "center",
-        renderCell: (params) => (
-          <Stack direction={"row"} gap={2} alignItems={'center'}>
-            <IconButton color="dark">
-              <Edit />
-            </IconButton> 
-            <IconButton color="dark">
-              <Delete />
-            </IconButton>
-          </Stack>
-        ),
-      },
     ],
     []
   );
 
+  console.log({ rows, data });
+
   useEffect(() => {
-    setRows(
-     chats.map((i) => {
-        return { ...i, id: i._id };
-      })
-    ); 
-  }, []);
-  
+    if (data?.allChats) {
+      setRows(
+        data.allChats.map((i) => {
+          return { ...i, id: i._id };
+        })
+      );
+    }
+  }, [data]);
+
   return (
     <AdminLayout>
-      <Table rows={rows} columns={columns} title={"CHATS"} />
+      <Title title={"Chats"} description={"Admin All Chats."} />
+      <Table
+        isFetching={loading}
+        rows={rows}
+        columns={columns}
+        pageSize={8}
+        title={"CHATS"}
+      />
     </AdminLayout>
   );
 };

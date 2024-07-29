@@ -32,7 +32,7 @@ const AdminLogin = () => {
     e.preventDefault();
     return dispatch(adminLogin(adminPasskey));
   };
-   
+    
 
   useEffect(() => {
     dispatch(adminVerifyAuth());
@@ -49,7 +49,7 @@ const AdminLogin = () => {
     
       }}
     >
-      <Title title={"Login"} description={"ChatIO login"} />
+      <Title title={"Admin Login"} description={"ChatIO Admin login"} />
       <Container component={"main"} maxWidth={"xs"}>
         <Paper
           elevation={3}

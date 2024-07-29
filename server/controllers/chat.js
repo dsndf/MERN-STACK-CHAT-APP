@@ -383,6 +383,13 @@ export const getChatDetails = catchAsyncError(async (req, res, next) => {
     if (!chat.isGroup) {
       chat.name = getOtherMembers(chat.members, me, true)?.[0]?.name;
     }
+  } else {
+    if (!chat.isGroup) {
+      let chatPartner = await User.findById(
+        getOtherMembers(chat.members, me)?.[0]
+      ).select("name");
+      chat.name = chatPartner.name;
+    }
   }
   res.json({ success: true, chat });
 });

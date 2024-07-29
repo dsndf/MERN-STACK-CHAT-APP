@@ -3,6 +3,7 @@ import React from "react";
 import { transformImage } from "../../lib/features";
 
 const RenderAttachment = ({ file, url }) => {
+  console.log({url})
   switch (file) {
     case "image":
       return (

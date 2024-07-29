@@ -18,7 +18,7 @@ export const adminLogin = createAsyncThunk(
     }
   }
 );
-export const adminVerifyAuth = createAsyncThunk(async () => {
+export const adminVerifyAuth = createAsyncThunk("admin/verify", async () => {
   try {
     const { data } = await axios.get(server + "/admin/verify/auth", {
       withCredentials: true,
@@ -28,3 +28,18 @@ export const adminVerifyAuth = createAsyncThunk(async () => {
     throw error.response.data.message;
   }
 });
+
+export const adminLogout = createAsyncThunk(
+  "admin/logout",
+  async (p = null, thunkApi) => {
+    thunkApi.dispatch(setLoading(true));
+    try {
+      const { data } = await axios.get(server + "/admin/logout", {
+        withCredentials: true,
+      });
+      return data.message;
+    } catch (error) {
+      throw error.response.data.message;
+    }
+  }
+);

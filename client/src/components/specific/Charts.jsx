@@ -59,14 +59,14 @@ const lineChartOptions = {
     },
   },
 };
-export const LineChart = () => {
+export const LineChart = ({ messagesOfLastSevenDays = [] }) => {
   const data = {
     labels: getLast7days(),
     datasets: [
       {
-        data: [2, 13, 4, 9, 15, 0, 20],
+        data: messagesOfLastSevenDays,
         fill: true,
-        label: "Revenue",
+        label: "Message",
         backgroundColor: "#d2a3d9",
         borderColor: mainBg,
       },

@@ -218,7 +218,7 @@ export const replyfriendRequest = catchAsyncError(async (req, res, next) => {
 });
 
 export const logoutUser = catchAsyncError(async (req, res, next) => {
-  res.clearCookie("chatIoToken", configureCookie(0, "none"));
+  res.clearCookie("chatifyToken", configureCookie(0, "none"));
   const myFriends = req.user.friends;
   emitEvent(req, OFFLINE, { users: myFriends });
   res.json({ success: true, message: "Logged out successfully" });

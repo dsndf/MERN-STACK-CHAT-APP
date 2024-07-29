@@ -18,7 +18,7 @@ export const adminLogin = catchAsyncError((req, res, next) => {
 });
 
 export const adminLogout = catchAsyncError((req, res, next) => {
-  res.clearCookie("chatIO-admin-token", configureCookie(0, "none"));
+  res.clearCookie("chatify-admin-token", configureCookie(0, "none"));
   res.json({
     success: true,
     message: "Logged out successfully",
@@ -29,7 +29,7 @@ export const getAdminStats = catchAsyncError(async (req, res, next) => {
   const currentDay = new Date();
   const dayBeforeSevethDay = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [users, messages, singleChats, GroupChats, messagesInLastSevenDays] =
+  const [users, messages, singleChats, groupChats, messagesInLastSevenDays] =
     await Promise.all([
       User.countDocuments(),
       Message.countDocuments(),
@@ -49,19 +49,23 @@ export const getAdminStats = catchAsyncError(async (req, res, next) => {
             _id: {
               $dayOfWeek: "$createdAt",
             },
-            count: { $sum: 1 },
+            totalMessageCount: { $sum: 1 },
           },
         },
       ]),
     ]);
+  let messagesPerDay = [];
+  for (let i = 0; i < 7; i++) {
+    messagesPerDay.push(messagesInLastSevenDays[i]?.totalMessageCount || 0);
+  }
   res.json({
     success: true,
     users,
     messages,
-    chats: singleChats + GroupChats,
+    chats: singleChats + groupChats,
     singleChats,
-    GroupChats,
-    messagesInLastSevenDays,
+    groupChats,
+    messagesInLastSevenDays: messagesPerDay.reverse(),
   });
 });
 
@@ -78,7 +82,7 @@ export const getAllChats = catchAsyncError(async (req, res, next) => {
     return {
       ...chat,
       avatar,
-      totolMembers: chat.members.length,
+      totalMembers: chat.members.length,
       totalMessages,
     };
   });
@@ -87,16 +91,23 @@ export const getAllChats = catchAsyncError(async (req, res, next) => {
 });
 export const getAllUsers = catchAsyncError(async (req, res, next) => {
   const [users] = await Promise.all([User.find().lean()]);
-  const allPromises = users.map(async (user) => {
-    const totalGroups = await Chat.countDocuments({
-      $and: [{ isGroup: true }, { members: user._id }],
-    });
-    return {
-      ...user,
-      totalGroups,
-    };
-  });
-  const allUsers = await Promise.all(allPromises);
+  const allUsers = await Promise.all(
+    users.map(async (user) => {
+      console.log({user})
+      const friendsData = user.friends?.map((id) =>
+        User.findById(id).select("avatar")
+      ) || [];
+      const totalGroups = await Chat.countDocuments({
+        $and: [{ isGroup: true }, { members: user._id }],
+      });
+      const friends = await Promise.all(friendsData);
+      return {
+        ...user,
+        totalGroups,
+        friends,
+      };
+    })
+  );
   res.json({ success: true, allUsers });
 });
 export const getAllMessages = catchAsyncError(async (req, res, next) => {
@@ -107,6 +118,12 @@ export const getAllMessages = catchAsyncError(async (req, res, next) => {
 });
 
 export const adminVerifyAuth = catchAsyncError((req, res, next) => {
+  const token = req.cookies["chatIO-admin-token"];
+  if (!token)
+    res.json({
+      success: false,
+      message: "Please login to go to dashboard.",
+    });
   res.json({
     success: true,
   });

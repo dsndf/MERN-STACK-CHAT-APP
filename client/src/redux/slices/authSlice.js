@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-hot-toast";
 import { server } from "../../config/settings";
-import { adminLogin, adminVerifyAuth } from "../thunk/adminAuth";
+import { adminLogin, adminLogout, adminVerifyAuth } from "../thunk/adminAuth";
 import axios from "axios";
 const initialState = {
   user: {},
@@ -46,13 +46,25 @@ export const authSlice = createSlice({
         toast.error(action.error.message);
       })
       .addCase(adminVerifyAuth.fulfilled, (state, action) => {
-        state.isAdmin = true;
+        state.isAdmin = action.payload;
         state.loading = false;
-        toast.success("Welcome to Dashboard");
+        if (action.payload) toast.success("Welcome to Dashboard Boss");
       })
       .addCase(adminVerifyAuth.rejected, (state, action) => {
+        console.log(action.error);
         state.isAdmin = false;
         state.loading = false;
+        toast.error(action.error.message);
+      })
+      .addCase(adminLogout.fulfilled, (state, action) => {
+        state.isAdmin = false;
+        state.loading = false;
+        toast.success(action.payload);
+      })
+      .addCase(adminLogout.rejected, (state, action) => {
+        state.isAdmin = false;
+        state.loading = false;
+        toast.error(action.error.message);
       });
   },
 });
@@ -68,6 +80,7 @@ export const loadUser = () => {
       const { data } = await axios.get(`${server}/user/profile`, {
         withCredentials: true,
       });
+      console.log("CHALA THA ", data);
       console.log({ data });
       dispatch(setUser(data.profile));
       dispatch(setIsAuth(true));

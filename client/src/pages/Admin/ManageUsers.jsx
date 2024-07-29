@@ -4,9 +4,28 @@ import Table from "../../components/shared/Table";
 import { Avatar, IconButton, Stack } from "@mui/material";
 import { userTableData } from "../../constants/sampleData";
 import { Delete, Edit } from "@mui/icons-material";
+import { useErrors } from "../../hooks/useErrors";
+import { useFetchData } from "6pp";
+import { server } from "../../config/settings";
+import Title from "../../components/shared/Title";
 
 const ManageUsers = () => {
-  const [rows,setRows] = useState([]);
+  const {
+    data,
+    error: usersError,
+    loading,
+  } = useFetchData(server + "/admin/users", "admin-users");
+ console.log({data})
+  useErrors(
+    [
+      {
+        isError: Boolean(usersError),
+        error: usersError,
+      },
+    ],
+    [usersError]
+  );
+  const [rows, setRows] = useState([]);
   const columns = useMemo(
     () => [
       {
@@ -26,10 +45,10 @@ const ManageUsers = () => {
         headerName: "AVATAR",
         headerClassName: "table-header",
         width: 200,
-        renderCell: (params) => <Avatar src={params.row.avatar} />,
+        renderCell: (params) => <Avatar src={params.row.avatar?.url} />,
       },
       {
-        field: "groups",
+        field: "totalGroups",
         headerName: "GROUPS",
         headerClassName: "table-header",
         width: 200,
@@ -39,6 +58,7 @@ const ManageUsers = () => {
         headerName: "FRIENDS",
         headerClassName: "table-header",
         width: 200,
+        renderCell:(params)=><Avatar src={params.row.avatar?.url}/>
       },
       {
         field: "action",
@@ -61,21 +81,21 @@ const ManageUsers = () => {
     ],
     []
   );
-  
+
   useEffect(() => {
-    setRows(userTableData.map((i)=>{
-      return {...i , id:i._id};
-    } ))
-  }, []);
+    if (data?.allUsers) {
+      setRows(
+        data.allUsers.map((i) => {
+          return { ...i, id: i._id };
+        })
+      );
+    }
+  }, [data]);
 
   return (
     <AdminLayout>
-      <Table
-        columns={columns}
-        rows={rows}
-        title={"USERS"}
-        rowHeight={75}
-      />
+       <Title title={"Users"} description={"Admin All Users."} />
+      <Table columns={columns} rows={rows} title={"USERS"} rowHeight={75} />
     </AdminLayout>
   );
 };

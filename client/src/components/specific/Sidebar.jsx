@@ -2,6 +2,7 @@ import { Box, Stack, Typography } from "@mui/material";
 import React from "react";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import { useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import {
   Dashboard,
   Forum,
@@ -13,6 +14,7 @@ import {
 } from "@mui/icons-material";
 import { darkBlue } from "../../constants/color";
 import { StyledLink } from "../style/StyleComponent";
+import { adminLogout } from "../../redux/thunk/adminAuth";
 
 const tabs = [
   {
@@ -62,7 +64,7 @@ const TabOption = ({ title, icon, style }) => {
       }}
     >
       {icon}
-      <Typography variant="h6" sx={{ fontSize: "16px" }}>
+      <Typography variant="h6" sx={{ fontSize: "15px" }}>
         {title}
       </Typography>
     </Box>
@@ -71,6 +73,8 @@ const TabOption = ({ title, icon, style }) => {
 
 const Sidebar = ({ style }) => {
   const location = useLocation();
+  const dispatch = useDispatch();
+
   return (
     <Stack
       spacing={4}
@@ -99,7 +103,14 @@ const Sidebar = ({ style }) => {
       <Stack width={"100%"} spacing={2}>
         {tabs &&
           tabs.map((tab) => (
-            <StyledLink to={tab?.path}>
+            <StyledLink
+              to={tab?.path}
+              onClick={
+                tab?.name === "Logout"
+                  ? () => tab?.logutHandler(() => dispatch(adminLogout()))
+                  : null
+              }
+            >
               <TabOption
                 title={tab?.name}
                 icon={tab?.icon}

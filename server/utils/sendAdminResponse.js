@@ -4,9 +4,11 @@ import { configureCookie } from "../lib/helper.js";
 
 export const sendAdminResponse = (res, message) => {
   const uniqueId = crypto.randomUUID();
-  const token = jwt.sign({ id: uniqueId }, process.env.ADMIN_SECRET_KEY);
+  const token = jwt.sign({ id: uniqueId }, process.env.ADMIN_SECRET_KEY, {
+    expiresIn: process.env.ADMIN_TOKEN_EXPIRY * 24 * 3600,
+  });
   res.cookie(
-    "chatIO-admin-token",
+    "chatify-admin-token",
     token,
     configureCookie(process.env.ADMIN_TOKEN_EXPIRY * 24 * 3600000, "none")
   );

@@ -45,7 +45,9 @@ userSchema.pre("save", async function (next) {
 
 userSchema.methods.generateAuthToken = async function () {
   const _id = this._id;
-  const authToken = jwt.sign({ _id }, process.env.SECRET_KEY);
+  const authToken = jwt.sign({ _id }, process.env.SECRET_KEY, {
+    expiresIn: `${process.env.TOKEN_EXPIRY} days`,
+  });
   return authToken;
 };
 

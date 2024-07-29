@@ -21,12 +21,30 @@ import {
 import moment from "moment";
 import { DougnutChart, LineChart } from "../../components/specific/Charts";
 import Widget from "../../components/specific/Widget";
-import { getLast7days } from "../../lib/features";
-
+import { useFetchData } from "6pp";
+import { server } from "../../config/settings";
+import { useErrors } from "../../hooks/useErrors";
+import Title from "../../components/shared/Title";
 const Dashboard = () => {
-  console.log(getLast7days());
+  const {
+    data: stats,
+    error,
+    loading,
+  } = useFetchData(server + "/admin/stats", "dashboard-stats", []);
+
+  useErrors(
+    [
+      {
+        isError: Boolean(error),
+        error,
+      },
+    ],
+    [error]
+  );
+  console.log({ stats });
   return (
     <AdminLayout>
+      <Title title={"Dashboard"} description={"Admin Dashboard"} />
       <Stack spacing={"1rem"} p={"1rem"}>
         <Paper elevation={3} sx={{ borderRadius: "5px", p: "15px" }}>
           <Stack
@@ -89,7 +107,9 @@ const Dashboard = () => {
               Last Messages
             </Typography>
             <Box sx={{ height: { xs: "auto", md: "auto" }, width: "auto" }}>
-              <LineChart />
+              <LineChart
+                messagesOfLastSevenDays={stats?.messagesInLastSevenDays}
+              />
             </Box>
           </Paper>
           <Paper
@@ -118,7 +138,7 @@ const Dashboard = () => {
               >
                 <Person /> vs <Group />
               </Typography>
-              <DougnutChart />
+              <DougnutChart value={[stats?.singleChats, stats?.groupChats]} />
             </Box>
           </Paper>
         </Stack>
@@ -129,9 +149,13 @@ const Dashboard = () => {
           alignItems={"center"}
           gap={"1rem"}
         >
-          <Widget title={"Users"} count={23} icon={<Person />} />
-          <Widget title={"Chats"} count={15} icon={<Group />} />
-          <Widget title={"Messages"} count={100} icon={<Message />} />
+          <Widget title={"Users"} count={stats?.users} icon={<Person />} />
+          <Widget title={"Chats"} count={stats?.chats} icon={<Group />} />
+          <Widget
+            title={"Messages"}
+            count={stats?.messages}
+            icon={<Message />}
+          />
         </Stack>
       </Stack>
     </AdminLayout>

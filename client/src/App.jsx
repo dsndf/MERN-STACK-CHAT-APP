@@ -12,7 +12,7 @@ import { useDispatchAndSelector } from "./hooks/useDispatchAndSelector.js";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
 
 const Home = lazy(() => import("./pages/Home"));
-const About = lazy(() => import("./pages/About"));
+
 const Login = lazy(() => import("./pages/auth/Login"));
 const Chat = lazy(() => import("./pages/Chat.jsx"));
 const Groups = lazy(() => import("./pages/Groups.jsx"));
@@ -30,7 +30,7 @@ const SuspenseLoader = () => {
       alignItems={"center"}
       height={"100vh"}
     >
-      <CircularProgress size={100} />
+      <CircularProgress  size={50} />
     </Box>
   );
 };
@@ -40,6 +40,8 @@ const App = () => {
     dispatch,
     state: { isAuth, user, message, err, isAdmin },
   } = useDispatchAndSelector("auth");
+
+
   useEffect(() => {
     dispatch(loadUser());
   }, [dispatch]);
@@ -62,7 +64,6 @@ const App = () => {
           >
             <Route path="/" element={<Home />}></Route>
             <Route path="/chat/:id" element={<Chat />}></Route>
-            <Route path="/about" element={<About />}></Route>
             <Route path="/groups" element={<Groups />} />
           </Route>
 
