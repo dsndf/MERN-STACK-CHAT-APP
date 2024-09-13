@@ -69,11 +69,12 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-
 app.use((req, res, next) => {
-
   req.io = io;
   next();
+});
+app.get("/", (req, res, next) => {
+  res.json({ success: true, message: "Chatify Server" });
 });
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/chat", chatRouter);
