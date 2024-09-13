@@ -97,7 +97,7 @@ const Sidebar = ({ style }) => {
           variant="h4"
           fontWeight={"500"}
         >
-          chat.IO
+          Chatify
         </Typography>
       </Stack>
       <Stack width={"100%"} spacing={2}>

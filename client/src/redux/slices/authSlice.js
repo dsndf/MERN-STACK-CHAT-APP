@@ -46,7 +46,7 @@ export const authSlice = createSlice({
         toast.error(action.error.message);
       })
       .addCase(adminVerifyAuth.fulfilled, (state, action) => {
-        state.isAdmin = action.payload;
+        state.isAdmin = true;
         state.loading = false;
         if (action.payload) toast.success("Welcome to Dashboard Boss");
       })

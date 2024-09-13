@@ -21,11 +21,11 @@ const SocketApiContext = ({ children }) => {
   }, []);
   useEffect(() => {
     socket.on("connect", () => {
-      toast.success(socket.id + " connected");
+      // toast.success(socket.id + " connected");
       setSocketId(socket.id);
     });
     socket.on("disconnect", (reason) => {
-      toast.success("Disconnected");
+      // toast.success("Disconnected");
     });
     socket.on("connect_error", async (err) => {
       toast.error(err.message);

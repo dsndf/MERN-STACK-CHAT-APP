@@ -132,6 +132,7 @@ const Header = ({ drawerOpenHandler }) => {
                   md: "block",
                 },
               }}
+              onClick={()=>navigate('/')}
             >
               <Telegram /> Chatify
             </IconButton>
@@ -151,7 +152,7 @@ const Header = ({ drawerOpenHandler }) => {
             <AppIconButton
               title={"Notifications"}
               icon={
-                <Badge badgeContent={notifyCount} color="secondary">
+                <Badge badgeContent={notifyCount} color="secondary"  >
                   <Notifications />
                 </Badge>
               }

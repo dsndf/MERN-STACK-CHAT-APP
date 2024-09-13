@@ -116,6 +116,7 @@ const Chat = ({ chatId: currentChatId }) => {
       chatId: currentChatId,
       message: message,
     });
+    setMessage("");
   };
 
   const sendAttachmentsHandler = (e) => {
